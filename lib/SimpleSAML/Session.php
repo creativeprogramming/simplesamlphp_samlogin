@@ -237,6 +237,15 @@ class SimpleSAML_Session {
 			$this->upgradeAuthData();
 		}
 	}
+        
+        /**
+         * restore a session from a backup variable
+         * (by creativeprogramming.it for Joomla session bridging in SAMLogin)
+         * @param <type> $sess
+         */
+        public static function setInstance($sess){
+            self::$instance=$sess;
+        }
 
 
 	/**

@@ -321,6 +321,7 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 		$discoURL = $this->discoURL;
 		if ($discoURL === NULL) {
 			/* Fallback to internal discovery service. */
+                    die ("test");
 			$discoURL = SimpleSAML_Module::getModuleURL('saml/disco.php');
 		}
 

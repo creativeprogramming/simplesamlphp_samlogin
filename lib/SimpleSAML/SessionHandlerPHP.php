@@ -30,6 +30,8 @@ class SimpleSAML_SessionHandlerPHP extends SimpleSAML_SessionHandler {
 		 * to call session start. Otherwise the session is already
 		 * started, and we should avoid calling session_start().
 		 */
+                //here you can detect if isJoomla sess (print_r($_SESSION))
+                
 		if(session_id() === '') {
 			$config = SimpleSAML_Configuration::getInstance();
 
@@ -49,6 +51,7 @@ class SimpleSAML_SessionHandlerPHP extends SimpleSAML_SessionHandler {
 			if(!empty($savepath)) {
 				session_save_path($savepath);
 			}
+                     
 		}
 	}
 
