@@ -144,17 +144,34 @@ class SimpleSAML_Utilities {
 		return $port;
 
 	}
+        
+        public static function __fixPathInfoForNginx() {
+        $matches = array();
+        if (preg_match("/^(.+\/module\.php)(\?)?(\/.+)$/", $_SERVER['REQUEST_URI'], $matches)) {
+            $pathinfo = $matches[3];
+
+            $m = array();
+            if (preg_match("/(.*)\?(.*)/", $pathinfo, $m)) {
+                $pathinfo = substr($pathinfo, 0, strripos($pathinfo, "?"));
+            }
+            $_SERVER['PATH_INFO'] = $pathinfo;
+         //   $scriptname = str_ireplace($pathinfo, "", $matches[0]);
+            $scriptname = substr($_SERVER['REQUEST_URI'], 0,  stripos($_SERVER['REQUEST_URI'], "module.php/")+strlen("module.php"));
+            $_SERVER['SCRIPT_NAME'] = $scriptname;
+        }
+    }
 
 	/**
 	 * Will return https://sp.example.org/universities/ruc/baz/simplesaml/saml2/SSOService.php
 	 */
 	public static function selfURLNoQuery() {
-	
+	self::__fixPathInfoForNginx();
 		$selfURLhost = self::selfURLhost();
 		$selfURLhost .= $_SERVER['SCRIPT_NAME'];
 		if (isset($_SERVER['PATH_INFO'])) {
 			$selfURLhost .= $_SERVER['PATH_INFO'];
 		}
+              
 		return $selfURLhost;
 	
 	}
@@ -179,7 +196,7 @@ class SimpleSAML_Utilities {
 	 * Will return foo
 	 */
 	public static function getFirstPathElement($trailingslash = true) {
-	
+		self::__fixPathInfoForNginx();
 		if (preg_match('|^/(.*?)/|', $_SERVER['SCRIPT_NAME'], $matches)) {
 			return ($trailingslash ? '/' : '') . $matches[1];
 		}
