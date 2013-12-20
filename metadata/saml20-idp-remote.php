@@ -9,7 +9,7 @@
 
 /*
  * Guest IdP. allows users to sign up and register. Great for testing!
- */
+disabled  by creativeprogramming
 $metadata['https://openidp.feide.no'] = array(
 	'name' => array(
 		'en' => 'Feide OpenIdP - guest users',
@@ -21,4 +21,5 @@ $metadata['https://openidp.feide.no'] = array(
 	'SingleLogoutService'  => 'https://openidp.feide.no/simplesaml/saml2/idp/SingleLogoutService.php',
 	'certFingerprint'      => 'c9ed4dfb07caf13fc21e0fec1572047eb8a7a4cb'
 );
+ */
 
