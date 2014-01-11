@@ -566,12 +566,12 @@ class sspmod_saml_Message {
 		/* Check various properties of the assertion. */
 
 		$notBefore = $assertion->getNotBefore();
-		if ($notBefore !== NULL && $notBefore > time() + 120) {  //default clock skew is 60, increased to 120 by creativeprogramming.it
+		if ($notBefore !== NULL && $notBefore > time() + 180) {  //default clock skew is 60, increased to 180 by creativeprogramming.it
 			throw new SimpleSAML_Error_Exception('Received an assertion that is valid in the future. Check clock synchronization on IdP and SP.');
 		}
 
 		$notOnOrAfter = $assertion->getNotOnOrAfter();
-		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 120) {  //default clock skew is 60, increased to 120 by creativeprogramming.it
+		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 180) {  //default clock skew is 60, increased to 180 by creativeprogramming.it
 			throw new SimpleSAML_Error_Exception('Received an assertion that has expired. Check clock synchronization on IdP and SP.');
 		}
 
