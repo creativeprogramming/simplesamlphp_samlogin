@@ -12,7 +12,7 @@ class SimpleSAML_Auth_TimeLimitedToken {
 	 * @param $lifeTime Token lifetime in seconds
 	 * @param $skew  Allowed time skew between server that generates and the one that calculates the token
 	 */
-	public function __construct( $lifetime = 900, $secretSalt = NULL, $skew = 2) {
+	public function __construct( $lifetime = 900, $secretSalt = NULL, $skew = 1) {
 		if ($secretSalt === NULL) {
 			$secretSalt = SimpleSAML_Utilities::getSecretSalt();
 		}
