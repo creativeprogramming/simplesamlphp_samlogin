@@ -290,7 +290,7 @@ $config = array (
 	/*
 	 * Option to override the default settings for the auth token cookie
 	 */
-	'session.authtoken.cookiename' => 'SimpleSAMLAuthToken',
+	'session.authtoken.cookiename' => 'SAMLoginCookieAuthToken',
 
 	/*
 	 * Languages available, RTL languages, and what language is default
