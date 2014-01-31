@@ -80,7 +80,6 @@ class SimpleSAML_SessionHandlerPHP extends SimpleSAML_SessionHandler {
 				SimpleSAML_Session::createSession($sessionId);
 				session_id($sessionId);
 			}
-			
 			session_start();
 		}
 
