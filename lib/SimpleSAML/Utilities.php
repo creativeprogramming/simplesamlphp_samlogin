@@ -671,6 +671,18 @@ class SimpleSAML_Utilities {
 			SimpleSAML_Logger::warning('Redirecting to URL longer than 2048 bytes.');
 		}
 
+
+                if(preg_match('/(?i)msie [1-8]/',$_SERVER['HTTP_USER_AGENT']))
+                {
+                    /* Disable caching of this response. */
+                    header('Pragma: no-cache');
+                    header('Cache-Control: no-cache, must-revalidate');
+
+                    echo("<script type='text/javascript'>window.location.href='".$url."';</script>");
+                    echo("<a href='".$url."'>click here if you don't get automatically redirected...</a>");
+                    die();        
+                }
+
 		/* Set the location header. */
 		header('Location: ' . $url, TRUE, $code);
 
@@ -682,7 +694,7 @@ class SimpleSAML_Utilities {
 		echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 		echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"' .
 			' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">' . "\n";
-		echo '<html xmlns="http://www.w3.org/1999/xhtml">';
+		echo '<html prefix="og: http://ogp.me/ns#" xmlns="http://www.w3.org/1999/xhtml">';
 		echo '<head>
 					<meta http-equiv="content-type" content="text/html; charset=utf-8">
 					<title>Redirect</title>
