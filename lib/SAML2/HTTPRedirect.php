@@ -28,7 +28,15 @@ class SAML2_HTTPRedirect extends SAML2_Binding {
 
 		$key = $message->getSignatureKey();
 
-		$msgStr = $message->toUnsignedXML();
+                $msgStr = $message->toSignedXML();
+                $isLteIE8=false;
+                if(preg_match('/(?i)msie [1-8]/',$_SERVER['HTTP_USER_AGENT']))
+                {
+                    // if IE<=8
+                        $isLteIE8=true;
+                        //$msgStr = $message->toUnsignedXML();
+                }else{
+                }
 		$msgStr = $msgStr->ownerDocument->saveXML($msgStr);
 
 		SimpleSAML_Utilities::debugMessage($msgStr, 'out');
@@ -49,7 +57,7 @@ class SAML2_HTTPRedirect extends SAML2_Binding {
 			$msg .= '&RelayState=' . urlencode($relayState);
 		}
 
-		if ($key !== NULL) {
+		if (!$isLteIE8 && $key !== NULL) {  //or request too long for IE
 			/* Add the signature. */
 			$msg .= '&SigAlg=' . urlencode($key->type);
 
