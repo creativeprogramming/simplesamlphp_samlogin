@@ -41,7 +41,7 @@ $metadata['__DYNAMIC:1__'] = array(
 	 *
 	 * Please refer to the IdP hosted reference for more information.
 	 */
-	//'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
+	'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
 
 	/* Uncomment the following to use the uri NameFormat on attributes. */
 	/*

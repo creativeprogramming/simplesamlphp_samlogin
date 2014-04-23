@@ -1,0 +1,6 @@
+AuthName "Joomla Idemauth Protection is Active"
+AuthType Basic
+<Limit GET POST>
+order deny,allow
+deny from all
+</Limit>

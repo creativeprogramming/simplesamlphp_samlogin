@@ -6,12 +6,9 @@
  */
 
 $config = array (
-
-	'key' => 'secret',
+	'key' => 'changeme',
 	'allowed_tags' => array('daily', 'hourly', 'frequent'),
 	'debug_message' => TRUE,
-	'sendemail' => TRUE,
+	'sendemail' => FALSE,
 
 );
-
-?>

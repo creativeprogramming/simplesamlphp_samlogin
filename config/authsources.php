@@ -24,6 +24,14 @@ $config = array(
 		// Can be NULL/unset, in which case the user will be shown a list of available IdPs.
 		'idp' => NULL,
 
+                'authproc' => array(
+                    15 => array(
+                            'class' => 'core:AttributeMap',
+                           'oid2name'
+                        )
+                    ),
+
+
 		// The URL to the discovery service.
 		// Can be NULL/unset, in which case a builtin discovery service will be used.
 		'discoURL' => NULL,
@@ -46,7 +54,7 @@ $config = array(
 		 *
 		 * Please refer to the hosted SP configuration reference for more information.
 	 	 */
-		//'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
+		'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
 	),
 
 

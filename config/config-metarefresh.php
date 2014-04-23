@@ -19,7 +19,7 @@ $config = array(
 
 	'sets' => array(
 
-		'kalmar' => array(
+		'samlogin' => array(
 			'cron'		=> array('hourly'),
 			'sources'	=> array(
 				array(
@@ -40,17 +40,19 @@ $config = array(
 
 					#'conditionalGET' => TRUE,
 					'src' => 'https://kalmar2.org/simplesaml/module.php/aggregator/?id=kalmarcentral&set=saml2&exclude=norway',
-					'validateFingerprint' => '59:1D:4B:46:70:46:3E:ED:A9:1F:CC:81:6D:C0:AF:2A:09:2A:A8:01',
+					/*'validateFingerprint' => '59:1D:4B:46:70:46:3E:ED:A9:1F:CC:81:6D:C0:AF:2A:09:2A:A8:01',
 					'template' => array(
 						'tags'	=> array('kalmar'),
 						'authproc' => array(
 							51 => array('class' => 'core:AttributeMap', 'oid2name'),
 						),
 					),
+                                         *
+                                         */
 				),
 			),
-			'expireAfter' 		=> 60*60*24*4, // Maximum 4 days cache time.
-			'outputDir' 	=> 'metadata/metadata-kalmar-consuming/',
+			'expireAfter' 		=> 60*60*24*365, // Maximum 365 days cache time.
+			'outputDir' 	=> 'metadata/federations/',
 
 			/*
 			 * Which output format the metadata should be saved as.
@@ -60,6 +62,3 @@ $config = array(
 		),
 	),
 );
-
-
-

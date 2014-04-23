@@ -14,7 +14,7 @@ $config = array (
 	 * List a set of tags (Tabs) that should be listed in a specific order.
 	 * All other available tabs will be listed after the ones specified below.
 	 */
-	'taborder' => array('norway'),
+	'taborder' => array('misc'),
 	/*
 	 * the 'tab' parameter allows you to limit the tabs to a specific list. (excluding unlisted tags)
 	 *
