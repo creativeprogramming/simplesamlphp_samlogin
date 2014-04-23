@@ -22,7 +22,7 @@ $config = array (
 	 * external url, no matter where you come from (direct access or via the
 	 * reverse proxy).
 	 */
-	'baseurlpath'           => 'components/com_samlogin/simplesamlphp/www/',
+	'baseurlpath'           => 'simplesaml/',
 	'certdir'               => 'cert/',
 	'loggingdir'            => 'log/',
 	'datadir'               => 'data/',
@@ -32,7 +32,7 @@ $config = array (
 	 *
 	 * SimpleSAMLphp will attempt to create this directory if it doesn't exist.
 	 */
-	'tempdir'               => 'tmp/simplesaml',
+	'tempdir'               => '/tmp/simplesaml',
 	
 
 	/*
@@ -225,7 +225,7 @@ $config = array (
 	/*
 	 * Option to override the default settings for the session cookie name
 	 */
-	'session.cookie.name' => 'SAMLoginSimpleSAMLSessionID',
+	'session.cookie.name' => 'SimpleSAMLSessionID',
 
 	/*
 	 * Expiration time for the session cookie, in seconds.
@@ -288,16 +288,14 @@ $config = array (
 	/*
 	 * Options to override the default settings for php sessions.
 	 */
-	'session.phpsession.cookiename'  => 'SAMLoginCookie',//SSPCookie
-                ////oterwise joomla one can override it and ss session will losed (default is null) //TODO: check if SLO now works without tricks!!
-                //(Attention: need to be the same of session_name in loginRecevier.php)
+	'session.phpsession.cookiename'  => null,
 	'session.phpsession.savepath'    => null,
 	'session.phpsession.httponly'    => FALSE,
 
 	/*
 	 * Option to override the default settings for the auth token cookie
 	 */
-	'session.authtoken.cookiename' => 'SAMLoginCookieAuthToken',
+	'session.authtoken.cookiename' => 'SimpleSAMLAuthToken',
 
 	/*
 	 * Options for remember me feature for IdP sessions. Remember me feature
@@ -508,14 +506,6 @@ $config = array (
  			'class' => 'core:AttributeAdd', 'groups' => array('users', 'members')
  		),
  		*/
- 		
-		12 => array('class' => 'core:AttributeMap', 'removeurnprefix'),
-
-		// Generate the 'group' attribute populated from other variables, including eduPersonAffiliation.
-		
- 		60 => array('class' => 'core:GenerateGroups', 'eduPersonAffiliation'),
- 		// All users will be members of 'users' and 'members' 	
- 	//	61 => array('class' => 'core:AttributeAdd', 'groups' => array('users', 'members')),
  		
 		// Adopts language from attribute to use in UI
  		90 => 'core:LanguageAdaptor',

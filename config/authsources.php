@@ -24,14 +24,6 @@ $config = array(
 		// Can be NULL/unset, in which case the user will be shown a list of available IdPs.
 		'idp' => NULL,
 
-             'authproc' => array(
-                 15 => array(
-                         'class' => 'core:AttributeMap',
-                        'oid2name'
-                     )
-                 ),
-
-
 		// The URL to the discovery service.
 		// Can be NULL/unset, in which case a builtin discovery service will be used.
 		'discoURL' => NULL,
