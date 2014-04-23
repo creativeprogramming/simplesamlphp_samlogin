@@ -22,4 +22,3 @@ $metadata['https://openidp.feide.no'] = array(
 	'certFingerprint'      => 'c9ed4dfb07caf13fc21e0fec1572047eb8a7a4cb'
 );
  */
-
