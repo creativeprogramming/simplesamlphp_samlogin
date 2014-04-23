@@ -218,7 +218,7 @@ $config = array (
 	/*
 	 * Option to override the default settings for the session cookie name
 	 */
-	'session.cookie.name' => 'SimpleSAMLSessionID',
+	'session.cookie.name' => 'SAMLoginSimpleSAMLSessionID',
 
 	/*
 	 * Expiration time for the session cookie, in seconds.
@@ -523,7 +523,7 @@ $config = array (
 	 */
 	'metadata.sources' => array(
             array('type' => 'flatfile'),
-            array('type' => 'xml', 'url' => 'https://services-federation.renater.fr/metadata/renater-test-metadata.xml')
+            array('type' => 'xml', 'url' => 'https://www.cacegypt.org/components/com_samlogin/simplesamlphp/www/module.php/saml/sp/metadata.php/default-sp')
 //
               /*array('type' => 'xml', 'url' => 'http://..../metadata.xml')*/
 	),
