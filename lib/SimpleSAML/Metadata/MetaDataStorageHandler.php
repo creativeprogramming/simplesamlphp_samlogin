@@ -5,7 +5,7 @@
  *
  * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
- * @version $Id: MetaDataStorageHandler.php 2720 2011-01-19 11:55:44Z olavmrk $
+ * @version $Id: MetaDataStorageHandler.php 3263 2013-08-22 10:09:15Z jaimepc@gmail.com $
  */ 
 class SimpleSAML_Metadata_MetaDataStorageHandler {
 
@@ -100,6 +100,9 @@ class SimpleSAML_Metadata_MetaDataStorageHandler {
 
 				case 'SingleLogoutService' : 
 					return $baseurl . 'saml2/sp/SingleLogoutService.php';					
+
+				case 'SingleLogoutServiceBinding' :
+					return SAML2_Const::BINDING_HTTP_REDIRECT;
 			}
 		} elseif($set == 'saml20-idp-hosted') {
 
@@ -107,8 +110,14 @@ class SimpleSAML_Metadata_MetaDataStorageHandler {
 				case 'SingleSignOnService' : 
 					return $baseurl . 'saml2/idp/SSOService.php';
 
+				case 'SingleSignOnServiceBinding' : 
+					return SAML2_Const::BINDING_HTTP_REDIRECT;
+
 				case 'SingleLogoutService' : 
 					return $baseurl . 'saml2/idp/SingleLogoutService.php';
+
+				case 'SingleLogoutServiceBinding' :
+					return SAML2_Const::BINDING_HTTP_REDIRECT;
 			}
 		} elseif($set == 'shib13-sp-hosted') {
 			switch ($property) {				
@@ -341,4 +350,3 @@ class SimpleSAML_Metadata_MetaDataStorageHandler {
 
 }
 
-?>

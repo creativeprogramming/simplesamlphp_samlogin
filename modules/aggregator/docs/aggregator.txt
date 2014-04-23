@@ -7,7 +7,7 @@ aggregator Module
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: aggregator.txt 1894 2009-10-23 10:47:27Z andreassolberg $`
+  * Version: `$Id: aggregator.txt 3351 2014-02-03 08:43:49Z jaimepc@gmail.com $`
   * Author: Andreas Åkre Solberg <andreas.solberg@uninett.no>, UNINETT AS
   * Package: simpleSAMLphp
 
@@ -33,6 +33,16 @@ The configuration file includes an option `aggregators`, which includes a indexe
 
 All of the global parameters can be overriden for each aggregator. Here is a list of the available (global) paramters:
 
+`maxDuration`
+: Max validity of metadata (duration) in seconds.
+
+`reconstruct`
+: Whether simpleSAMLphp should regenerate the metadata XML (TRUE) or pass-through the input metadata XML (FALSE).
+
+`RegistrationInfo`
+:   Allows to specify information about the registrar of this metadata. Please refer to the
+    [MDRPI extension](./simplesamlphp-metadata-extensions-rpi) document for further information.
+
 `set`
 : By default all SAML types are available, including: `array('saml20-idp-remote', 'saml20-sp-remote', 'shib13-idp-remote', 'shib13-sp-remote')`. This list can be reduced by specifying one of the following values:
 
@@ -43,26 +53,17 @@ All of the global parameters can be overriden for each aggregator. Here is a lis
   * `saml2`
   * `shib13`
 
-`foo`
-: sldkfjdslkjf
-
-`reconstruct`
-: Whether simpleSAMLphp should regenerate the metadata XML (TRUE) or pass-through the input metadata XML (FALSE).
-
-`maxDuration`
-: Max validity of metadata (duration) in seconds.
-
 `sign.enable`
 : Enable signing of metadata document
+
+`sign.certificate`
+: Certificate to embed, corresponding to the private key.
 
 `sign.privatekey`
 : Private key to use when signing
 
 `sign.privatekey_pass`
 : Optionally a passphrase to the private key
-
-`sign.certificate`
-: Certificate to embed, corresponding to the private key.
 
 
 Accessing the aggregate
@@ -84,7 +85,7 @@ The endpoint supports the following query parameter:
 : Specify a `tag` that will be excluded from the metadata set. Useful for leaving out your own federation metadata.
 
 `mimetype`
-: Select Mime-Type that will be used. Default is `application/samlmetadata+xml`.
+: Select the Mime-Type that will be used. Default is `application/samlmetadata+xml`.
 
 
 

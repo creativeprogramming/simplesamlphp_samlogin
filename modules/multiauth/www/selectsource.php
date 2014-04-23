@@ -16,6 +16,12 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 }
 $authStateId = $_REQUEST['AuthState'];
 
+// sanitize the input
+$sid = SimpleSAML_Utilities::parseStateID($authStateId);
+if (!is_null($sid['url'])) {
+	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+}
+
 /* Retrieve the authentication state. */
 $state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_multiauth_Auth_Source_MultiAuth::STAGEID);
 

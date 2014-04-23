@@ -6,7 +6,7 @@
  *
  * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
  * @package simpleSAMLphp
- * @version $Id: SingleLogoutService.php 2140 2010-01-27 09:26:39Z olavmrk $
+ * @version $Id: SingleLogoutService.php 3332 2014-01-24 16:36:54Z jaimepc@gmail.com $
  */
 
 require_once('../../_include.php');
@@ -18,7 +18,7 @@ $idpEntityId = $metadata->getMetaDataCurrentEntityID('saml20-idp-hosted');
 $idp = SimpleSAML_IdP::getById('saml2:' . $idpEntityId);
 
 if (isset($_REQUEST['ReturnTo'])) {
-	$idp->doLogoutRedirect((string)$_REQUEST['ReturnTo']);
+	$idp->doLogoutRedirect(SimpleSAML_Utilities::checkURLAllowed((string)$_REQUEST['ReturnTo']));
 } else {
 	sspmod_saml_IdP_SAML2::receiveLogoutMessage($idp);
 }

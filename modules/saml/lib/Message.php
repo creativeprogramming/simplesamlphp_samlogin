@@ -24,6 +24,16 @@ class sspmod_saml_Message {
 
 		$algo = $dstMetadata->getString('signature.algorithm', NULL);
 		if ($algo === NULL) {
+			/*
+			 * In the NIST Special Publication 800-131A, SHA-1 became deprecated for generating
+			 * new digital signatures in 2011, and will be explicitly disallowed starting the 1st
+			 * of January, 2014. We'll keep this as a default for the next release and mark it
+			 * as deprecated, as part of the transition to SHA-256.
+			 *
+			 * See http://csrc.nist.gov/publications/nistpubs/800-131A/sp800-131A.pdf for more info.
+			 *
+			 * TODO: change default to XMLSecurityKey::RSA_SHA256.
+			 */
 			$algo = $srcMetadata->getString('signature.algorithm', XMLSecurityKey::RSA_SHA1);
 		}
 
@@ -413,16 +423,10 @@ class sspmod_saml_Message {
 		/* Shoaib - setting the appropriate binding based on parameter in sp-metadata defaults to HTTP_POST */
 		$ar->setProtocolBinding($protbind);
 
-		/* Select appropriate SSO endpoint */
-		if ($protbind === SAML2_Const::BINDING_HOK_SSO) {
-		    $dst = $idpMetadata->getDefaultEndpoint('SingleSignOnService', array(SAML2_Const::BINDING_HOK_SSO));
-		} else {
-		    $dst = $idpMetadata->getDefaultEndpoint('SingleSignOnService', array(SAML2_Const::BINDING_HTTP_REDIRECT));
-		}
-		$dst = $dst['Location'];
-
 		$ar->setIssuer($spMetadata->getString('entityid'));
-		$ar->setDestination($dst);
+
+		$ar->setAssertionConsumerServiceIndex($spMetadata->getInteger('AssertionConsumerServiceIndex', NULL));
+		$ar->setAttributeConsumingServiceIndex($spMetadata->getInteger('AttributeConsumingServiceIndex', NULL));
 
 		if ($spMetadata->hasValue('AuthnContextClassRef')) {
 			$accr = $spMetadata->getArrayizeString('AuthnContextClassRef');
@@ -443,13 +447,8 @@ class sspmod_saml_Message {
 	 */
 	public static function buildLogoutRequest(SimpleSAML_Configuration $srcMetadata, SimpleSAML_Configuration $dstMetadata) {
 
-		$dst = $dstMetadata->getDefaultEndpoint('SingleLogoutService', array(SAML2_Const::BINDING_HTTP_REDIRECT));
-		$dst = $dst['Location'];
-
 		$lr = new SAML2_LogoutRequest();
-
 		$lr->setIssuer($srcMetadata->getString('entityid'));
-		$lr->setDestination($dst);
 
 		self::addRedirectSign($srcMetadata, $dstMetadata, $lr);
 
@@ -465,17 +464,8 @@ class sspmod_saml_Message {
 	 */
 	public static function buildLogoutResponse(SimpleSAML_Configuration $srcMetadata, SimpleSAML_Configuration $dstMetadata) {
 
-		$dst = $dstMetadata->getDefaultEndpoint('SingleLogoutService', array(SAML2_Const::BINDING_HTTP_REDIRECT));
-		if (isset($dst['ResponseLocation'])) {
-			$dst = $dst['ResponseLocation'];
-		} else {
-			$dst = $dst['Location'];
-		}
-
 		$lr = new SAML2_LogoutResponse();
-
 		$lr->setIssuer($srcMetadata->getString('entityid'));
-		$lr->setDestination($dst);
 
 		self::addRedirectSign($srcMetadata, $dstMetadata, $lr);
 
@@ -566,12 +556,12 @@ class sspmod_saml_Message {
 		/* Check various properties of the assertion. */
 
 		$notBefore = $assertion->getNotBefore();
-		if ($notBefore !== NULL && $notBefore > time() + 180) {  //default clock skew is 60, increased to 180 by creativeprogramming.it
+		if ($notBefore !== NULL && $notBefore > time() + 60) {
 			throw new SimpleSAML_Error_Exception('Received an assertion that is valid in the future. Check clock synchronization on IdP and SP.');
 		}
 
 		$notOnOrAfter = $assertion->getNotOnOrAfter();
-		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 180) {  //default clock skew is 60, increased to 180 by creativeprogramming.it
+		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 60) {
 			throw new SimpleSAML_Error_Exception('Received an assertion that has expired. Check clock synchronization on IdP and SP.');
 		}
 

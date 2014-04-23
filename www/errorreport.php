@@ -91,7 +91,7 @@ if (!preg_match('/\s/', $email) && strpos($email, '@') !== FALSE) {
 
 /* Send the email. */
 $toAddress = $config->getString('technicalcontact_email', 'na@example.org');
-if ($toAddress !== 'na@example.org') {
+if ($config->getBoolean('errorreporting', TRUE) && $toAddress !== 'na@example.org') {
 	$email = new SimpleSAML_XHTML_EMail($toAddress, 'simpleSAMLphp error report', $from);
 	$email->setBody($message);
 	$email->send();
@@ -99,4 +99,4 @@ if ($toAddress !== 'na@example.org') {
 }
 
 /* Redirect the user back to this page to clear the POST request. */
-SimpleSAML_Utilities::redirect(SimpleSAML_Utilities::selfURLNoQuery());
+SimpleSAML_Utilities::redirectTrustedURL(SimpleSAML_Utilities::selfURLNoQuery());

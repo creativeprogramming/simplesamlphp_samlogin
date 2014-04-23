@@ -7,7 +7,7 @@ Setting up a simpleSAMLphp SAML 2.0 IdP to use with Google Apps for Education
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-googleapps.txt 3208 2012-12-03 12:27:53Z olavmrk $`
+  * Version: `$Id: simplesamlphp-googleapps.txt 3333 2014-01-27 09:28:12Z jaimepc@gmail.com $`
 
 
 <!-- {{TOC}} -->
@@ -211,7 +211,7 @@ You must also configure the IdP initiated Single LogOut endpoint of your server.
 
 again, using the host name of your IdP server.
 
-The Sign-out page or change password url can be static pages on your server.
+The Sign-out page or change password URL can be static pages on your server.
 
 The network mask determines which IP addresses will be asked for SSO login. IP addresses not matching this mask will be presented with the normal Google Apps login page. I think you can leave this field empty to enable authentication for all URLs.
 

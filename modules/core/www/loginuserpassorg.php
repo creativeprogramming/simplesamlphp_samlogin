@@ -15,6 +15,12 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 }
 $authStateId = $_REQUEST['AuthState'];
 
+// sanitize the input
+$sid = SimpleSAML_Utilities::parseStateID($authStateId);
+if (!is_null($sid['url'])) {
+	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+}
+
 /* Retrieve the authentication state. */
 $state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_core_Auth_UserPassOrgBase::STAGEID);
 
@@ -59,7 +65,7 @@ if ($organizations === NULL || !empty($organization)) {
 			$params = $sessionHandler->getCookieParams();
 			$params['expire'] = time();
 			$params['expire'] += (isset($_REQUEST['remember_username']) && $_REQUEST['remember_username'] == 'Yes' ? 31536000 : -300);
-			setcookie($source->getAuthId() . '-username', $username, $params['expire'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+			SimpleSAML_Utilities::setCookie($source->getAuthId() . '-username', $username, $params, FALSE);
 		}
 
 		try {
@@ -97,5 +103,3 @@ if (isset($state['SPMetadata'])) {
 $t->show();
 exit();
 
-
-?>

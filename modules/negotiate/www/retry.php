@@ -10,6 +10,13 @@
  */
 
 $authStateId = $_REQUEST['AuthState'];
+
+// sanitize the input
+$sid = SimpleSAML_Utilities::parseStateID($authStateId);
+if (!is_null($sid['url'])) {
+	SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+}
+
 $state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_negotiate_Auth_Source_Negotiate::STAGEID);
 
 $metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();

@@ -15,7 +15,7 @@ if (!array_key_exists('id', $_GET)) {
 	exit;
 }
 $id = $_GET['id'];
-if (!in_array($id, $aggregators->getOptions())) 
+if (!in_array($id, $aggregators->getOptions()))
 	throw new SimpleSAML_Error_NotFound('No aggregator with id ' . var_export($id, TRUE) . ' found.');
 
 $aConfig = $aggregators->getConfigItem($id);
@@ -23,7 +23,7 @@ $aConfig = $aggregators->getConfigItem($id);
 
 $aggregator = new sspmod_aggregator_Aggregator($gConfig, $aConfig, $id);
 
-if (isset($_REQUEST['set'])) 
+if (isset($_REQUEST['set']))
 	$aggregator->limitSets($_REQUEST['set']);
 
 if (isset($_REQUEST['exclude'])) 
@@ -32,17 +32,24 @@ if (isset($_REQUEST['exclude']))
 
 $xml = $aggregator->getMetadataDocument();
 
+$mimetype = 'application/samlmetadata+xml';
+$allowedmimetypes = array(
+    'text/plain',
+    'application/samlmetadata-xml',
+    'application/xml',
+);
 
-/* Show the metadata. */
-if(array_key_exists('mimetype', $_GET)) {
-	$mimeType = $_GET['mimetype'];
-} else {
-	$mimeType = 'application/samlmetadata+xml';
+if (isset($_GET['mimetype']) && in_array($_GET['mimetype'], $allowedmimetypes)) {
+    $mimetype = $_GET['mimetype'];
 }
 
-header('Content-Type: ' . $mimeType);
+if ($mimetype === 'text/plain') {
+    SimpleSAML_Utilities::formatDOMElement($xml);
+}
 
-echo($xml->saveXML());
+$metadata = '<?xml version="1.0"?>'."\n".$xml->ownerDocument->saveXML($xml);
 
+header('Content-Type: ' . $mimetype);
+header('Content-Length: ' . strlen($metadata));
 
-?>
+echo $metadata;

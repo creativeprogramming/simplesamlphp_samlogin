@@ -15,9 +15,7 @@ $config = array(
 	// and Shibboleth 1.3 IdPs.
 	'default-sp' => array(
 		'saml:SP',
-            
-                'privatekey' => 'saml.key',
-                'certificate' => 'saml.crt',
+
 		// The entity ID of this SP.
 		// Can be NULL/unset, in which case an entity ID is generated based on the metadata URL.
 		'entityID' => NULL,
@@ -25,7 +23,7 @@ $config = array(
 		// The entity ID of the IdP this should SP should contact.
 		// Can be NULL/unset, in which case the user will be shown a list of available IdPs.
 		'idp' => NULL,
-            
+
              'authproc' => array(
                  15 => array(
                          'class' => 'core:AttributeMap',
@@ -36,9 +34,27 @@ $config = array(
 
 		// The URL to the discovery service.
 		// Can be NULL/unset, in which case a builtin discovery service will be used.
-		//'discoURL' => "https://samlogin25.creativeprogramming.it/components/com_samlogin/simplesamlphp/www/module.php/discopower/disco.php",
-           // 'discoURL' => "https://samlogin25.creativeprogramming.it/components/com_samlogin/simplesamlphp/www/module.php/discopower/disco.php",
-            'discoURL' => 'https://discovery.renater.fr/test/'
+		'discoURL' => NULL,
+
+		/*
+		 * WARNING: SHA-1 is disallowed starting January the 1st, 2014.
+		 *
+		 * Uncomment the following option to start using SHA-256 for your signatures.
+		 * Currently, simpleSAMLphp defaults to SHA-1, which has been deprecated since
+		 * 2011, and will be disallowed by NIST as of 2014. Please refer to the following
+		 * document for more information:
+		 * 
+		 * http://csrc.nist.gov/publications/nistpubs/800-131A/sp800-131A.pdf
+		 *
+		 * If you are uncertain about identity providers supporting SHA-256 or other
+		 * algorithms of the SHA-2 family, you can configure it individually in the
+		 * IdP-remote metadata set for those that support it. Once you are certain that
+		 * all your configured IdPs support SHA-2, you can safely remove the configuration
+		 * options in the IdP-remote metadata set and uncomment the following option.
+		 *
+		 * Please refer to the hosted SP configuration reference for more information.
+	 	 */
+		//'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
 	),
 
 
@@ -201,6 +217,10 @@ $config = array(
 		'authtwitter:Twitter',
 		'key' => 'xxxxxxxxxxxxxxxx',
 		'secret' => 'xxxxxxxxxxxxxxxx',
+
+		// Forces the user to enter their credentials to ensure the correct users account is authorized.
+		// Details: https://dev.twitter.com/docs/api/1/get/oauth/authenticate
+		'force_login' => FALSE,
 	),
 	*/
 

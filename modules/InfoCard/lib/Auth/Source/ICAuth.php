@@ -37,12 +37,11 @@ class sspmod_InfoCard_Auth_Source_ICAuth extends SimpleSAML_Auth_Source {
 		$state[self::AUTHID] = $this->authId;
 		$id = SimpleSAML_Auth_State::saveState($state, self::STAGEID);
 		$url = SimpleSAML_Module::getModuleURL('InfoCard/login-infocard.php');
-		SimpleSAML_Utilities::redirect($url, array('AuthState' => $id));
+		SimpleSAML_Utilities::redirectTrustedURL($url, array('AuthState' => $id));
 	}
 	
 
 	public static function handleLogin($authStateId, $xmlToken) {
-SimpleSAML_Logger::debug('ENTRA en icauth');
 		assert('is_string($authStateId)');		
 
 		$config = SimpleSAML_Configuration::getInstance();
@@ -61,14 +60,20 @@ SimpleSAML_Logger::debug('ENTRA en icauth');
     	SimpleSAML_Logger::debug("NOXMLtoken: ".$xmlToken);
 		$claims = $infocard->process($xmlToken);
  		if($claims->isValid()) {
-//		if(false) {
 			$attributes = array();
 			foreach ($Infocard['requiredClaims'] as $claim => $data){
 				$attributes[$claim] = array($claims->$claim);
 			}
 			foreach ($Infocard['optionalClaims'] as $claim => $data){
 				$attributes[$claim] = array($claims->$claim);
-			}	
+			}
+
+			// sanitize the input
+			$sid = SimpleSAML_Utilities::parseStateID($authStateId);
+			if (!is_null($sid['url'])) {
+				SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+			}
+
 			/* Retrieve the authentication state. */
 			$state = SimpleSAML_Auth_State::loadState($authStateId, self::STAGEID);
 			/* Find authentication source. */
@@ -78,12 +83,10 @@ SimpleSAML_Logger::debug('ENTRA en icauth');
 				throw new Exception('Could not find authentication source with id ' . $state[self::AUTHID]);
 			}			
 			$state['Attributes'] = $attributes;	
-SimpleSAML_Logger::debug('VALIDA');
 			unset($infocard);
 			unset($claims);
 			SimpleSAML_Auth_Source::completeAuth($state);
 		} else {
-SimpleSAML_Logger::debug('NO VALIDA ERROR:'.$claims->getErrorMsg());
 			unset($infocard);
 			unset($claims);
 			return 'wrong_IC';

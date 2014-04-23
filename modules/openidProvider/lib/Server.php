@@ -12,6 +12,8 @@ if (defined('E_DEPRECATED')) {
 
 /* Add the OpenID library search path. */
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(dirname(dirname(dirname(__FILE__)))) . '/lib');
+include_once  dirname(dirname(dirname(dirname(__FILE__)))) . '/lib/Auth/OpenID/SReg.php';
+include_once  dirname(dirname(dirname(dirname(__FILE__)))) . '/lib/Auth/OpenID/AX.php';
 
 /**
  * Helper class for the OpenID provider code.
@@ -22,7 +24,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . dirname(dirname(dirname(d
 class sspmod_openidProvider_Server {
 
 	/**
-	 * The authencication source for this provider.
+	 * The authentication source for this provider.
 	 *
 	 * @var SimpleSAML_Auth_Simple
 	 */
@@ -36,7 +38,13 @@ class sspmod_openidProvider_Server {
 	 */
 	private $usernameAttribute;
 
-
+  /**
+   * authproc configuration option
+   *
+   * @var array
+   */
+  private $authProc;
+  
 	/**
 	 * The OpenID server.
 	 *
@@ -86,6 +94,7 @@ class sspmod_openidProvider_Server {
 
 		$this->authSource = new SimpleSAML_Auth_Simple($config->getString('auth'));
 		$this->usernameAttribute = $config->getString('username_attribute');
+		$this->authProc = array( 'authproc' => $config->getArray('authproc', array()));
 
 		try {
 			$store = new Auth_OpenID_FileStore($config->getString('filestore'));
@@ -303,11 +312,11 @@ class sspmod_openidProvider_Server {
 
 
 	/**
-	 * Save the state, and return an URL that can contain a reference to the state.
+	 * Save the state, and return a URL that can contain a reference to the state.
 	 *
 	 * @param string $page  The name of the page.
 	 * @param array $state  The state array.
-	 * @return string  An URL with the state ID as a parameter.
+	 * @return string  A URL with the state ID as a parameter.
 	 */
 	private function getStateURL($page, array $state) {
 		assert('is_string($page)');
@@ -328,6 +337,12 @@ class sspmod_openidProvider_Server {
 	 */
 	public function loadState($stateId) {
 		assert('is_string($stateId)');
+
+		// sanitize the input
+		$sid = SimpleSAML_Utilities::parseStateID($stateId);
+		if (!is_null($sid['url'])) {
+			SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+		}
 
 		return SimpleSAML_Auth_State::loadState($stateId, 'openidProvider:resumeState');
 	}
@@ -372,6 +387,11 @@ class sspmod_openidProvider_Server {
 
 		$request = $state['request'];
 
+    	$sreg_req = Auth_OpenID_SRegRequest::fromOpenIDRequest($request);
+    	$ax_req = Auth_OpenId_AX_FetchRequest::fromOpenIDRequest($request);
+    
+     	/* In resume.php there should be a way to display data requested through sreg or ax. */
+
 		if (!$this->authSource->isAuthenticated()) {
 			if ($request->immediate) {
 				/* Not logged in, and we cannot show a login form. */
@@ -401,16 +421,48 @@ class sspmod_openidProvider_Server {
 			}
 
 			$trustURL = $this->getStateURL('trust.php', $state);
-			SimpleSAML_Utilities::redirect($trustURL);
+			SimpleSAML_Utilities::redirectTrustedURL($trustURL);
 		}
 
 		if (!$trusted) {
 			/* The user doesn't trust this site. */
 			$this->sendResponse($request->answer(FALSE));
 		}
+      
+    	$response = $request->answer(TRUE, NULL, $identity);
+
+    	//Process attributes
+    	$attributes = $this->authSource->getAttributes();
+    	foreach ($attributes as $key=>$attr) {
+            if (is_array($attr) && count($attr) === 1) {
+                    $attributes[$key] = $attr[0];
+            }
+    	}
+
+    	$pc = new SimpleSAML_Auth_ProcessingChain($this->authProc, array(), 'idp');
+    	$state = array(
+            'Attributes'=>$attributes,
+            'isPassive'=>TRUE
+    	);
+
+    	$pc->processStatePassive(&$state);
+    	$attributes = $state['Attributes'];
+
+    	//Process SREG requests
+    	$sreg_resp = Auth_OpenID_SRegResponse::extractResponse($sreg_req, $attributes);
+    	$sreg_resp->toMessage($response->fields);
+
+    	//Process AX requests
+    	$ax_resp = new Auth_OpenID_AX_FetchResponse();
+    	foreach($ax_req->iterTypes() as $type_uri) {
+            if(isset($attributes[$type_uri])) {
+                    $ax_resp->addValue($type_uri, $attributes[$type_uri]);
+            }
+    	}
+    	$ax_resp->toMessage($response->fields);
 
 		/* The user is authenticated, and trusts this site. */
-		$this->sendResponse($request->answer(TRUE, NULL, $identity));
+		$this->sendResponse($response);
 	}
 
 

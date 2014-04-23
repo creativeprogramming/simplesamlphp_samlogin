@@ -121,7 +121,7 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 			$params['source'] = $_GET['source'];
 		}
 
-		SimpleSAML_Utilities::redirect($url, $params);
+		SimpleSAML_Utilities::redirectTrustedURL($url, $params);
 
 		/* The previous function never returns, so this code is never
 		executed */
@@ -199,15 +199,17 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 
 		$cookieName = 'multiauth_source_' . $this->authId;
 
-		/* We save the cookies for 90 days. */
-		$saveUntil = time() + 60*60*24*90;
-
-		/* The base path for cookies. 
-		This should be the installation directory for simpleSAMLphp. */
 		$config = SimpleSAML_Configuration::getInstance();
-		$cookiePath = '/' . $config->getBaseUrl();
+		$params = array(
+			/* We save the cookies for 90 days. */
+			'lifetime' => (60*60*24*90),
+			/* The base path for cookies.
+			This should be the installation directory for simpleSAMLphp. */
+			'path' => ('/' . $config->getBaseUrl()),
+			'httponly' => FALSE,
+		);
 
-		setcookie($cookieName, $source, $saveUntil, $cookiePath);
+		SimpleSAML_Utilities::setCookie($cookieName, $source, $params, FALSE);
 	}
 
 	/**

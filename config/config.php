@@ -2,7 +2,7 @@
 /* 
  * The configuration of simpleSAMLphp
  * 
- * $Id: config.php 3246 2013-05-23 11:43:52Z olavmrk $
+ * $Id: config.php 3372 2014-02-21 08:02:56Z jaimepc@gmail.com $
  */
 
 $config = array (
@@ -46,8 +46,15 @@ $config = array (
 	 */
 	'debug' => FALSE,
 
-
+	/*
+	 * When showerrors is enabled, all error messages and stack traces will be output
+	 * to the browser.
+	 *
+	 * When errorreporting is enabled, a form will be presented for the user to report
+	 * the error to technicalcontact_email.
+	 */
 	'showerrors'            =>	TRUE,
+	'errorreporting'		=>	TRUE,
 
 	/**
 	 * Custom error show function called from SimpleSAML_Error_Error::show.
@@ -69,7 +76,7 @@ $config = array (
 	 * metadata listing and diagnostics pages.
 	 * You can also put a hash here; run "bin/pwgen.php" to generate one.
 	 */
-	'auth.adminpassword'		=> '1234',  /*123 is the default value and pratically means that no private administrative access is enabled*/
+	'auth.adminpassword'		=> '123',
 	'admin.protectindexpage'	=> false,
 	'admin.protectmetadata'		=> false,
 
@@ -88,8 +95,8 @@ $config = array (
 	 * The email address will be used as the recipient address for error reports, and
 	 * also as the technical contact in generated metadata.
 	 */
-	'technicalcontact_name'     => 'Stefano Gargiulo',
-	'technicalcontact_email'    => 'info@creativeprogramming.it',
+	'technicalcontact_name'     => 'Administrator',
+	'technicalcontact_email'    => 'na@example.org',
 
 	/*
 	 * The timezone of the server. This option should be set to the timezone you want
@@ -171,7 +178,7 @@ $config = array (
 	 * one of the functionalities below, but in some cases you could run multiple functionalities.
 	 * In example when you are setting up a federation bridge.
 	 */
-	'enable.saml20-idp'		=> true,
+	'enable.saml20-idp'		=> false,
 	'enable.shib13-idp'		=> false,
 	'enable.adfs-idp'		=> false,
 	'enable.wsfed-sp'		=> false,
@@ -293,9 +300,34 @@ $config = array (
 	'session.authtoken.cookiename' => 'SAMLoginCookieAuthToken',
 
 	/*
+	 * Options for remember me feature for IdP sessions. Remember me feature
+	 * has to be also implemented in authentication source used.
+	 *
+	 * Option 'session.cookie.lifetime' should be set to zero (0), i.e. cookie
+	 * expires on browser session if remember me is not checked.
+	 *
+	 * Session duration ('session.duration' option) should be set according to
+	 * 'session.rememberme.lifetime' option.
+	 *
+	 * It's advised to use remember me feature with session checking function
+	 * defined with 'session.check_function' option.
+	 */
+	'session.rememberme.enable' => FALSE,
+	'session.rememberme.checked' => FALSE,
+	'session.rememberme.lifetime' => (14*86400),
+
+	/**
+	 * Custom function for session checking called on session init and loading.
+	 * See docs/simplesamlphp-advancedfeatures.txt for function code example.
+	 *
+	 * Example:
+	 *   'session.check_function' => array('sspmod_example_Util', 'checkSession'),
+	 */
+
+	/*
 	 * Languages available, RTL languages, and what language is default
 	 */
-	'language.available'	=> array('en', 'no', 'nn', 'se', 'da', 'de', 'sv', 'fi', 'es', 'fr', 'it', 'nl', 'lb', 'cs', 'sl', 'lt', 'hr', 'hu', 'pl', 'pt', 'pt-br', 'tr', 'ja', 'zh', 'zh-tw', 'ru', 'et', 'he', 'id', 'sr', 'lv'),
+	'language.available'	=> array('en', 'no', 'nn', 'se', 'da', 'de', 'sv', 'fi', 'es', 'fr', 'it', 'nl', 'lb', 'cs', 'sl', 'lt', 'hr', 'hu', 'pl', 'pt', 'pt-br', 'tr', 'ja', 'zh', 'zh-tw', 'ru', 'et', 'he', 'id', 'sr', 'lv', 'ro'),
 	'language.rtl'		=> array('ar','dv','fa','ur','he'),
 	'language.default'		=> 'en',
 
@@ -406,7 +438,7 @@ $config = array (
 		/* Enable the authproc filter below to add URN Prefixces to all attributes
  		10 => array(
  			'class' => 'core:AttributeMap', 'addurnprefix'
- 		), *
+ 		), */
  		/* Enable the authproc filter below to automatically generated eduPersonTargetedID. 
  		20 => 'core:TargetedID',
  		*/
@@ -423,7 +455,7 @@ $config = array (
 			'type' => 'saml20-idp-SSO',
 		),
 
-		/* When called without parameters, it will fallback to filter attributes ???the old way???
+		/* When called without parameters, it will fallback to filter attributes ‹the old way›
 		 * by checking the 'attributes' parameter in metadata on IdP hosted and SP remote.
 		 */
 		50 => 'core:AttributeLimit', 
@@ -458,15 +490,32 @@ $config = array (
 	 * Both Shibboleth and SAML 2.0
 	 */
 	'authproc.sp' => array(
-		
-	
+		/*
+		10 => array(
+			'class' => 'core:AttributeMap', 'removeurnprefix'
+		),
+		*/
+
+		/*
+		 * Generate the 'group' attribute populated from other variables, including eduPersonAffiliation.
+ 		60 => array(
+			'class' => 'core:GenerateGroups', 'eduPersonAffiliation'
+		),
+		*/
+ 		/*
+ 		 * All users will be members of 'users' and 'members'
+ 		61 => array(
+ 			'class' => 'core:AttributeAdd', 'groups' => array('users', 'members')
+ 		),
+ 		*/
+ 		
 		12 => array('class' => 'core:AttributeMap', 'removeurnprefix'),
 
 		// Generate the 'group' attribute populated from other variables, including eduPersonAffiliation.
 		
  		60 => array('class' => 'core:GenerateGroups', 'eduPersonAffiliation'),
  		// All users will be members of 'users' and 'members' 	
- 		61 => array('class' => 'core:AttributeAdd', 'groups' => array('users', 'members')),
+ 	//	61 => array('class' => 'core:AttributeAdd', 'groups' => array('users', 'members')),
  		
 		// Adopts language from attribute to use in UI
  		90 => 'core:LanguageAdaptor',
@@ -496,7 +545,7 @@ $config = array (
 	 * The XML hetadata handler defines the following options:
 	 * - 'type': This is always 'xml'.
 	 * - 'file': Path to the XML file with the metadata.
-	 * - 'url': The url to fetch metadata from. THIS IS ONLY FOR DEBUGGING - THERE IS NO CACHING OF THE RESPONSE.
+	 * - 'url': The URL to fetch metadata from. THIS IS ONLY FOR DEBUGGING - THERE IS NO CACHING OF THE RESPONSE.
 	 *
 	 *
 	 * Examples:
@@ -522,10 +571,7 @@ $config = array (
 	 *     ),
 	 */
 	'metadata.sources' => array(
-            array('type' => 'flatfile'),
-            array('type' => 'xml', 'url' => 'https://www.cacegypt.org/components/com_samlogin/simplesamlphp/www/module.php/saml/sp/metadata.php/default-sp')
-//
-              /*array('type' => 'xml', 'url' => 'http://..../metadata.xml')*/
+		array('type' => 'flatfile'),
 	),
 
 
@@ -671,13 +717,26 @@ $config = array (
 	'proxy' => NULL,
 
 	/*
-	 * Array of URL's to allow a trusted redirect to.
+	 * Array of domains that are allowed when generating links or redirections
+	 * to URLs. simpleSAMLphp will use this option to determine whether to
+	 * to consider a given URL valid or not, but you should always validate
+	 * URLs obtained from the input on your own (i.e. ReturnTo or RelayState
+	 * parameters obtained from the $_REQUEST array).
 	 *
-	 * Set to NULL to disable.
+	 * Set to NULL to disable checking of URLs.
+	 *
+	 * simpleSAMLphp will automatically add your own domain (either by checking
+	 * it dinamically, or by using the domain defined in the 'baseurlpath'
+	 * directive, the latter having precedence) to the list of trusted domains,
+	 * in case this option is NOT set to NULL. In that case, you are explicitly
+	 * telling simpleSAMLphp to verify URLs.
+	 *
+	 * Set to an empty array to disallow ALL redirections or links pointing to
+	 * an external URL other than your own domain.
 	 *
 	 * Example:
-	 *   'redirect.trustedsites' => array('sp.example.com', 'othersite.org'),
+	 *   'trusted.url.domains' => array('sp.example.com', 'app.example.com'),
 	 */
-	'redirect.trustedsites' => NULL,
+	'trusted.url.domains' => NULL,
 
 );

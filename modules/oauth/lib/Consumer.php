@@ -7,7 +7,7 @@ require_once(dirname(dirname(__FILE__)) . '/libextinc/OAuth.php');
  *
  * @author Andreas Åkre Solberg, <andreas.solberg@uninett.no>, UNINETT AS.
  * @package simpleSAMLphp
- * @version $Id: Consumer.php 2734 2011-02-08 13:50:51Z olavmrk $
+ * @version $Id: Consumer.php 3326 2014-01-17 15:40:02Z jaimepc@gmail.com $
  */
 class sspmod_oauth_Consumer {
 	
@@ -88,12 +88,13 @@ class sspmod_oauth_Consumer {
 	}
 	
 	public function getAuthorizeRequest($url, $requestToken, $redirect = TRUE, $callback = NULL) {
-		$authorizeURL = $url . '?oauth_token=' . $requestToken->key;
+		$params = array('oauth_token' => $requestToken->key);
 		if ($callback) {
-			$authorizeURL .= '&oauth_callback=' . urlencode($callback);
+			$params['oauth_callback'] = $callback;
 		}
+		$authorizeURL = SimpleSAML_Utilities::addURLparameter($url, $params);
 		if ($redirect) {
-			SimpleSAML_Utilities::redirect($authorizeURL);
+			SimpleSAML_Utilities::redirectTrustedURL($authorizeURL);
 			exit;
 		}	
 		return $authorizeURL;

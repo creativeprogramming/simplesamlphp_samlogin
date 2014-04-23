@@ -85,6 +85,20 @@ class SimpleSAML_Metadata_SAMLBuilder {
 		return $xml->ownerDocument->saveXML();
 	}
 
+	public function addSecurityTokenServiceType($metadata) {
+		assert('is_array($metadata)');
+		assert('isset($metadata["entityid"])');
+		assert('isset($metadata["metadata-set"])');
+
+		$metadata = SimpleSAML_Configuration::loadFromArray($metadata, $metadata['entityid']);
+                $defaultEndpoint = $metadata->getDefaultEndpoint('SingleSignOnService');
+                $e = new sspmod_adfs_SAML2_XML_fed_SecurityTokenServiceType();
+                $e->Location = $defaultEndpoint['Location'];
+
+		$this->addCertificate($e, $metadata);
+
+		$this->entityDescriptor->RoleDescriptor[] = $e;
+	}
 
 	/**
 	 * @param SimpleSAML_Configuration $metadata  Metadata.
@@ -114,7 +128,12 @@ class SimpleSAML_Metadata_SAMLBuilder {
 			foreach ($metadata->getArray('scope') as $scopetext) {
 				$s = new SAML2_XML_shibmd_Scope();
 				$s->scope = $scopetext;
-				$s->regexp = FALSE;
+				// Check whether $ ^ ( ) * | \ are in a scope -> assume regex.
+				if (1 === preg_match('/[\$\^\)\(\*\|\\\\]/', $scopetext)) {
+					$s->regexp = TRUE;
+				} else {
+					$s->regexp = FALSE;
+				}
 				$e->Extensions[] = $s;
 			}
 		}
@@ -140,6 +159,25 @@ class SimpleSAML_Metadata_SAMLBuilder {
 				$ea->children[] = $a;
 			}
 			$this->entityDescriptor->Extensions[] = $ea;
+		}
+
+		if ($metadata->hasValue('RegistrationInfo')) {
+			$ri = new SAML2_XML_mdrpi_RegistrationInfo();
+			foreach ($metadata->getArray('RegistrationInfo') as $riName => $riValues) {
+				switch ($riName) {
+					case 'authority':
+						$ri->registrationAuthority = $riValues;
+						break;
+					case 'instant':
+						$ri->registrationInstant = SAML2_Utils::xsDateTimeToTimestamp($riValues);
+						break;
+					case 'policies':
+						$ri->RegistrationPolicy = $riValues;
+						break;
+				}
+			}
+			$this->entityDescriptor->Extensions[] = $ri;
+
 		}
 
 		if ($metadata->hasValue('UIInfo')) {

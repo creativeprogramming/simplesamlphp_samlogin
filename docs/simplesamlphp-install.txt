@@ -7,7 +7,7 @@ simpleSAMLphp Installation and Configuration
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-install.txt 3239 2013-05-08 07:45:06Z jaimepc@gmail.com $`
+  * Version: `$Id: simplesamlphp-install.txt 3333 2014-01-27 09:28:12Z jaimepc@gmail.com $`
 
 
 <!-- {{TOC}} -->
@@ -33,7 +33,7 @@ Prerequisites
 -------------
 
  * Some webserver capable of executing PHP scripts.
- * PHP version >= 5.2.0.
+ * PHP version >= 5.3.0.
  * Support for the following PHP extensions:
    * Always required: `date`, `dom`, `hash`, `libxml`, `openssl`, `pcre`, `SPL`, `zlib`, `mcrypt`
    * When authenticating against LDAP server: `ldap`
@@ -189,7 +189,7 @@ to `disable`.
 The simpleSAMLphp installation webpage
 --------------------------------------
 
-After installing simpleSAMLphp, you can access the homepage of your installation, which contains some information and a few links to the test services. The url of an installation can be e.g.:
+After installing simpleSAMLphp, you can access the homepage of your installation, which contains some information and a few links to the test services. The URL of an installation can be e.g.:
 
 	https://service.example.org/simplesaml/
 

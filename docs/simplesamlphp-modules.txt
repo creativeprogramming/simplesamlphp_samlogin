@@ -7,7 +7,7 @@ simpleSAMLphp modules
 	http://daringfireball.net/projects/markdown/syntax
 -->
 
-  * Version: `$Id: simplesamlphp-modules.txt 2209 2010-03-08 12:41:15Z andreassolberg $`
+  * Version: `$Id: simplesamlphp-modules.txt 3333 2014-01-27 09:28:12Z jaimepc@gmail.com $`
 
 <!-- {{TOC}} -->
 
@@ -113,7 +113,7 @@ www
 :   To retrieve this URL, the
     `SimpleSAML_Module::getModuleURL($resource)`-function can be used.
     This function takes in a resource on the form `<module>/<file>`.
-    This function will then return an URL to the given file in the
+    This function will then return a URL to the given file in the
     `www`-directory of `module`.
 
 
@@ -140,8 +140,8 @@ To use this authentication source in a SAML 2.0 IdP, set the
 
     '__DYNAMIC:1__' => array(
       'host' => '__DEFAULT__',
-      'privatekey' => 'server.pem',
-      'certificate' => 'server.crt',
+      'privatekey' => 'example.org.pem',
+      'certificate' => 'example.org.crt',
       'auth' => 'example-static',
     ),
 

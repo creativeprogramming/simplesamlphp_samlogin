@@ -168,7 +168,7 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 
 		SimpleSAML_Logger::debug('Starting SAML 1 SSO to ' . var_export($idpEntityId, TRUE) .
 			' from ' . var_export($this->entityId, TRUE) . '.');
-		SimpleSAML_Utilities::redirect($url);
+		SimpleSAML_Utilities::redirectTrustedURL($url);
 	}
 
 
@@ -222,8 +222,8 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 		if (isset($state['saml:IDPList'])) {
 			$IDPList = $state['saml:IDPList'];
 		} else {
-            $IDPList = array();
-        }
+			$IDPList = array();
+		}
 		
 		$ar->setIDPList(array_unique(array_merge($this->metadata->getArray('IDPList', array()), 
 												$idpMetadata->getArray('IDPList', array()),
@@ -259,7 +259,22 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 		$ar->setId($id);
 
 		SimpleSAML_Logger::debug('Sending SAML 2 AuthnRequest to ' . var_export($idpMetadata->getString('entityid'), TRUE));
-		$b = new SAML2_HTTPRedirect();
+
+		/* Select appropriate SSO endpoint */
+		if ($ar->getProtocolBinding() === SAML2_Const::BINDING_HOK_SSO) {
+			$dst = $idpMetadata->getDefaultEndpoint('SingleSignOnService', array(
+				SAML2_Const::BINDING_HOK_SSO)
+			);
+		} else {
+			$dst = $idpMetadata->getDefaultEndpoint('SingleSignOnService', array(
+				SAML2_Const::BINDING_HTTP_REDIRECT,
+				SAML2_Const::BINDING_HTTP_POST)
+			);
+		}
+		$ar->setDestination($dst['Location']);
+
+		$b = SAML2_Binding::getBinding($dst['Binding']);
+
 		$this->sendSAML2AuthnRequest($state, $b, $ar);
 
 		assert('FALSE');
@@ -325,18 +340,22 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 		}
 
 		$returnTo = SimpleSAML_Module::getModuleURL('saml/sp/discoresp.php', array('AuthID' => $id));
-        
-        $params = array(
-            'entityID' => $this->entityId,
-            'return' => $returnTo,
-            'returnIDParam' => 'idpentityid'
-        );
-        
-        if(isset($state['saml:IDPList'])) {
-            $params['IDPList'] = $state['saml:IDPList'];
-        }
+		
+		$params = array(
+			'entityID' => $this->entityId,
+			'return' => $returnTo,
+			'returnIDParam' => 'idpentityid'
+		);
+		
+		if(isset($state['saml:IDPList'])) {
+			$params['IDPList'] = $state['saml:IDPList'];
+		}
 
-		SimpleSAML_Utilities::redirect($discoURL, $params);
+		if (isset($state['isPassive']) && $state['isPassive']) {
+			$params['isPassive'] = 'true';
+		}
+
+		SimpleSAML_Utilities::redirectTrustedURL($discoURL, $params);
 	}
 
 
@@ -392,7 +411,9 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 
 		$idpMetadata = $this->getIdPMetadata($idp);
 
-		$endpoint = $idpMetadata->getDefaultEndpoint('SingleLogoutService', array(SAML2_Const::BINDING_HTTP_REDIRECT), FALSE);
+		$endpoint = $idpMetadata->getEndpointPrioritizedByBinding('SingleLogoutService', array(
+			SAML2_Const::BINDING_HTTP_REDIRECT,
+			SAML2_Const::BINDING_HTTP_POST), FALSE);
 		if ($endpoint === FALSE) {
 			SimpleSAML_Logger::info('No logout endpoint for IdP ' . var_export($idp, TRUE) . '.');
 			return;
@@ -402,6 +423,7 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 		$lr->setNameId($nameId);
 		$lr->setSessionIndex($sessionIndex);
 		$lr->setRelayState($id);
+		$lr->setDestination($endpoint['Location']);
 
 		$encryptNameId = $idpMetadata->getBoolean('nameid.encryption', NULL);
 		if ($encryptNameId === NULL) {
@@ -411,7 +433,7 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 			$lr->encryptNameId(sspmod_saml_Message::getEncryptionKey($idpMetadata));
 		}
 
-		$b = new SAML2_HTTPRedirect();
+		$b = SAML2_Binding::getBinding($endpoint['Binding']);
 		$b->send($lr);
 
 		assert('FALSE');

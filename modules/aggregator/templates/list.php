@@ -24,4 +24,3 @@ if (count($this->data['sources']) === 0) {
 }
 
 $this->includeAtTemplateBase('includes/footer.php');
-?>

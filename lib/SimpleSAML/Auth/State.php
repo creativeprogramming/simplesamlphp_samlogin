@@ -211,16 +211,10 @@ class SimpleSAML_Auth_State {
 		assert('is_bool($allowMissing)');
 		SimpleSAML_Logger::debug('Loading state: ' . var_export($id, TRUE));
 
-		$tmp = explode(':', $id, 2);
-		$id = $tmp[0];
-		if (count($tmp) === 2) {
-			$restartURL = $tmp[1];
-		} else {
-			$restartURL = NULL;
-		}
+		$sid = SimpleSAML_Utilities::parseStateID($id);
 
 		$session = SimpleSAML_Session::getInstance();
-		$state = $session->getData('SimpleSAML_Auth_State', $id);
+		$state = $session->getData('SimpleSAML_Auth_State', $sid['id']);
 
 		if ($state === NULL) {
 			/* Could not find saved data. */
@@ -228,11 +222,11 @@ class SimpleSAML_Auth_State {
 				return NULL;
 			}
 
-			if ($restartURL === NULL) {
+			if ($sid['url'] === NULL) {
 				throw new SimpleSAML_Error_NoState();
 			}
 
-			SimpleSAML_Utilities::redirect($restartURL);
+			SimpleSAML_Utilities::redirectTrustedURL($sid['url']);
 		}
 
 		$state = unserialize($state);
@@ -252,11 +246,11 @@ class SimpleSAML_Auth_State {
 
 			SimpleSAML_Logger::warning($msg);
 
-			if ($restartURL === NULL) {
+			if ($sid['url'] === NULL) {
 				throw new Exception($msg);
 			}
 
-			SimpleSAML_Utilities::redirect($restartURL);
+			SimpleSAML_Utilities::redirectTrustedURL($sid['url']);
 		}
 
 		return $state;
@@ -301,7 +295,7 @@ class SimpleSAML_Auth_State {
 			$id = self::saveState($state, self::EXCEPTION_STAGE);
 
 			/* Redirect to the exception handler. */
-			SimpleSAML_Utilities::redirect($state[self::EXCEPTION_HANDLER_URL], array(self::EXCEPTION_PARAM => $id));
+			SimpleSAML_Utilities::redirectTrustedURL($state[self::EXCEPTION_HANDLER_URL], array(self::EXCEPTION_PARAM => $id));
 
 		} elseif (array_key_exists(self::EXCEPTION_HANDLER_FUNC, $state)) {
 			/* Call the exception handler. */

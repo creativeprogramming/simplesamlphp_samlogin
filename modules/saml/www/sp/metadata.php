@@ -17,23 +17,26 @@ if (!($source instanceof sspmod_saml_Auth_Source_SP)) {
 
 $entityId = $source->getEntityId();
 $spconfig = $source->getMetadata();
+$store = SimpleSAML_Store::getInstance();
 
-$metaArray20 = array(
-	'SingleLogoutService' => SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId),
+$metaArray20 = array();
+
+$slosvcdefault = array(
+    SAML2_Const::BINDING_HTTP_REDIRECT,
+	SAML2_Const::BINDING_SOAP,
 );
 
-$store = SimpleSAML_Store::getInstance();
-if ($store instanceof SimpleSAML_Store_SQL) {
-	/* We can properly support SOAP logout. */
-	$metaArray20['SingleLogoutService'] = array(
-		array(
-			'Binding' => SAML2_Const::BINDING_HTTP_REDIRECT,
-			'Location' => SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId),
-		),
-		array(
-			'Binding' => SAML2_Const::BINDING_SOAP,
-			'Location' => SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId),
-		),
+$slob = $spconfig->getArray('SingleLogoutServiceBinding', $slosvcdefault);
+$slol = SimpleSAML_Module::getModuleURL('saml/sp/saml2-logout.php/' . $sourceId);
+
+foreach ($slob as $binding) {
+	if ($binding == SAML2_Const::BINDING_SOAP && !($store instanceof SimpleSAML_Store_SQL)) {
+		/* We cannot properly support SOAP logout. */
+		continue;
+	}
+	$metaArray20['SingleLogoutService'][] = array(
+		'Binding' => $binding,
+		'Location' => $slol,
 	);
 }
 
@@ -115,6 +118,11 @@ if ($certInfo !== NULL && array_key_exists('certData', $certInfo)) {
 	$certData = NULL;
 }
 
+$format = $spconfig->getString('NameIDPolicy', NULL);
+if ($format !== NULL) {
+    $metaArray20['NameIDFormat'] = $format;
+}
+
 $name = $spconfig->getLocalizedString('name', NULL);
 $attributes = $spconfig->getArray('attributes', array());
 
@@ -183,6 +191,11 @@ if (count($keys) === 1) {
 // add UIInfo extension
 if ($spconfig->hasValue('UIInfo')) {
 	$metaArray20['UIInfo'] = $spconfig->getArray('UIInfo');
+}
+
+// add RegistrationInfo extension
+if ($spconfig->hasValue('RegistrationInfo')) {
+	$metaArray20['RegistrationInfo'] = $spconfig->getArray('RegistrationInfo');
 }
 
 $supported_protocols = array('urn:oasis:names:tc:SAML:1.1:protocol', SAML2_Const::NS_SAMLP);
