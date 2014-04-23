@@ -40,6 +40,8 @@ $mimeTypes = array(
 	);
 
 try {
+    
+    SimpleSAML_Utilities::__fixPathInfoForNginx();
 
 	if (empty($_SERVER['PATH_INFO'])) {
 		throw new SimpleSAML_Error_NotFound('No PATH_INFO to module.php');
