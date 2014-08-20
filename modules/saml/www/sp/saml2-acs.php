@@ -5,9 +5,18 @@
  */
 
 $sourceId = substr($_SERVER['PATH_INFO'], 1);
+if ($sourceId==false){
+    $sourceId="default-sp";
+}
 $source = SimpleSAML_Auth_Source::getById($sourceId, 'sspmod_saml_Auth_Source_SP');
 $spMetadata = $source->getMetadata();
 
+/*
+print_r($_SERVER);
+echo" REQU IS:";
+print_r($_REQUEST);
+die();
+*/
 $b = SAML2_Binding::getCurrentBinding();
 if ($b instanceof SAML2_HTTPArtifact) {
 	$b->setSPMetadata($spMetadata);
@@ -17,6 +26,7 @@ $response = $b->receive();
 if (!($response instanceof SAML2_Response)) {
 	throw new SimpleSAML_Error_BadRequest('Invalid message received to AssertionConsumerService endpoint.');
 }
+
 
 $idp = $response->getIssuer();
 if ($idp === NULL) {
@@ -34,6 +44,8 @@ if ($idp === NULL) {
 	}
 }
 
+
+
 $session = SimpleSAML_Session::getInstance();
 $prevAuth = $session->getAuthData($sourceId, 'saml:sp:prevAuth');
 if ($prevAuth !== NULL && $prevAuth['id'] === $response->getId() && $prevAuth['issuer'] === $idp) {
@@ -45,6 +57,7 @@ if ($prevAuth !== NULL && $prevAuth['id'] === $response->getId() && $prevAuth['i
 	 * instead of displaying a confusing error message.
 	 */
 	SimpleSAML_Logger::info('Duplicate SAML 2 response detected - ignoring the response and redirecting the user to the correct page.');
+ 
 	SimpleSAML_Utilities::redirectTrustedURL($prevAuth['redirect']);
 }
 
@@ -79,11 +92,18 @@ if (!empty($stateId)) {
 	}
 } else {
 	/* This is an unsolicited response. */
+        $relayState= $response->getRelayState();
+  
+      if(!isset($relayState)){
+          $relayState =  "/components/com_samlogin/loginReceiver.php?task=loginCallback&rret=Lw==";
+      }
+  
 	$state = array(
 		'saml:sp:isUnsolicited' => TRUE,
 		'saml:sp:AuthId' => $sourceId,
-		'saml:sp:RelayState' => SimpleSAML_Utilities::checkURLAllowed($response->getRelayState()),
+		'saml:sp:RelayState' => SimpleSAML_Utilities::checkURLAllowed($relayState),
 	);
+       // die(print_r($state,true));
 }
 
 SimpleSAML_Logger::debug('Received SAML2 Response from ' . var_export($idp, TRUE) . '.');
@@ -199,6 +219,6 @@ if (isset($state['SimpleSAML_Auth_Default.ReturnURL'])) {
 	);
 	$state['PersistentAuthData'][] = 'saml:sp:prevAuth';
 }
-
+ //die(__LINE__."test".print_r($state,true));
 $source->handleResponse($state, $idp, $attributes);
 assert('FALSE');
