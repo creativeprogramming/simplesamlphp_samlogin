@@ -14,15 +14,25 @@ $metadata['__DYNAMIC:1__'] = array(
 	'host' => '__DEFAULT__',
 
 	/* X.509 key and certificate. Relative to the cert directory. */
-	'privatekey' => 'server.pem',
-	'certificate' => 'server.crt',
-
+	'privatekey' => 'saml.key',
+	'certificate' => 'saml.crt',
+      
+        'logouttype' => 'traditional',
 	/*
 	 * Authentication source to use. Must be one that is configured in
 	 * 'config/authsources.php'.
 	 */
-	'auth' => 'example-userpass',
-
+	'auth' => 'joomla-session',
+    'saml20.sign.response' => TRUE,
+    
+    'saml20.sign.assertion' => TRUE,
+    
+    'sign.logout' => TRUE,
+'attributes.NameFormat' => 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',
+'authproc' => array(
+    // Convert LDAP names to oids.
+    100 => array('class' => 'core:AttributeMap', 'name2oid'),
+),
 	/*
 	 * WARNING: SHA-1 is disallowed starting January the 1st, 2014.
 	 *
