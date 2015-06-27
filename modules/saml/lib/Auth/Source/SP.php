@@ -271,7 +271,15 @@ class sspmod_saml_Auth_Source_SP extends SimpleSAML_Auth_Source {
 				SAML2_Const::BINDING_HTTP_POST)
 			);
 		}
-		$ar->setDestination($dst['Location']);
+                //mail based discovery service extra parameter (experimental)
+		$app=_getJoomlaApp();
+
+                $useremail = JFactory::getSession()->get("samlogin_discoemail","");
+                $ar->setDestination($dst['Location']. ( (!empty($useremail))?  "?username=".$useremail : "" ));
+
+                $b = SAML2_Binding::getBinding($dst['Binding']);
+
+                $this->sendSAML2AuthnRequest($state, $b, $ar);
 
 		$b = SAML2_Binding::getBinding($dst['Binding']);
 
