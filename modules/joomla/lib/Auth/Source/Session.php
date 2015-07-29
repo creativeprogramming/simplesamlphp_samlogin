@@ -183,7 +183,7 @@ class sspmod_joomla_Auth_Source_Session extends SimpleSAML_Auth_Source {
             $state['Attributes']['User.jGroupIDs'] = $juser->get("groups");
             try {
 
-
+ 
                 $db->setQuery(
                         'SELECT `person_number`,`user_id`,`first_name`,`last_name`' .
                         ' FROM `bwp_user`' .
@@ -191,20 +191,26 @@ class sspmod_joomla_Auth_Source_Session extends SimpleSAML_Auth_Source {
                 );
                 $bwp_user = $db->loadAssoc();
 
-
+		
                 $db->setQuery(
-                        'SELECT `bwp_accountId`' .
+                        'SELECT bwp_accountId'.
                         ' FROM `bwp_premises_accounts`' .
-                        ' WHERE `user_id` = ' . (int) $bwp_user["user_id"]
+                        ' WHERE bwp_accountId IS NOT NULL 
+						AND NOT (bwp_accountId = \'\')
+						AND `user_id` = ' . (int) $bwp_user["user_id"]
                 );
-                $bwpAccountId = $db->loadResult();
-            
+
+	//		echo $db->getQuery();
+                $bwpAccountId = $db->loadColumn(0); 
+				
+          //      print_r($bwpAccountId); die();
+				
                 $state['Attributes']['givenName'] = array($bwp_user["first_name"]);
                 $state['Attributes']['sn'] = array($bwp_user["last_name"]);;
                 
                 $state['Attributes']['personid'] = array($bwp_user["person_number"]);
                 // $state['Attributes']['user_id']=array($bwp_user["user_id"]);
-                $state['Attributes']['accountid'] = array($bwpAccountId);
+                $state['Attributes']['accountid'] = $bwpAccountId;
 
                 //TODO configurable SQL mappings
                 //$samloginParams->get("attrmapping_")
