@@ -45,7 +45,7 @@ class SAML2_Assertion implements SAML2_SignedElement
      *
      * @var DOMElement|NULL
      */
-    private $encryptedNameId;
+    private $encryptedNameId = NULL;
 
     /**
      * The encrypted Attributes.
@@ -54,7 +54,7 @@ class SAML2_Assertion implements SAML2_SignedElement
      *
      * @var DOMElement[]|NULL
      */
-    private $encryptedAttribute;
+    private $encryptedAttribute = NULL;
 
     /**
      * Private key we should use to encrypt the attributes.
@@ -275,10 +275,12 @@ class SAML2_Assertion implements SAML2_SignedElement
             throw new Exception('More than one <saml:NameID> or <saml:EncryptedD> in <saml:Subject>.');
         }
         $nameId = $nameId[0];
+    //    die ("nameid: ".print_r($nameId,true));
         if ($nameId->localName === 'EncryptedData') {
             /* The NameID element is encrypted. */
             $this->encryptedNameId = $nameId;
         } else {
+            $this->encryptedNameId = NULL;
             $this->nameId = SAML2_Utils::parseNameId($nameId);
         }
 
@@ -504,6 +506,21 @@ class SAML2_Assertion implements SAML2_SignedElement
             $xml,
             './saml_assertion:AttributeStatement/saml_assertion:EncryptedAttribute'
         );
+        
+        /** experimental creativeprogramming.it patch for supporting saml2:EncryptedAttribute (probably this is not needed) */
+        if (  $this->encryptedAttribute == NULL){  
+            $this->encryptedAttribute = SAML2_Utils::xpQuery(
+                $xml,
+                './saml_assertion:AttributeStatement/saml2:EncryptedAttribute'
+            );
+        }
+        
+        if (count($this->encryptedAttribute)==0){
+            $this->encryptedAttribute = NULL;
+        }
+            //    die("Debugging encrypted attribute elements: <pre>".print_r(   $this->encryptedAttribute ,true)."</pre>");
+        /** end experimental creativeprogramming.it patch for supporting saml2:EncryptedAttribute (probably this is not needed) */
+
     }
 
     /**
@@ -657,6 +674,24 @@ class SAML2_Assertion implements SAML2_SignedElement
         return FALSE;
     }
 
+    
+    /**
+     *        experimental creativeprogramming.it patch for supporting saml2:EncryptedAttribute 
+     * 
+     * Check whether the attributes are encrypted.
+     *
+     * @return TRUE if the some attribute is encrypted, FALSE if not.
+     */
+    public function areAttributeEncrypted()
+    {
+        if ($this->encryptedAttribute !== NULL) {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    
     /**
      * Encrypt the NameID in the Assertion.
      *

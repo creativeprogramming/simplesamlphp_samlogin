@@ -271,7 +271,7 @@ class sspmod_saml_Message {
 			$key->loadKey($sharedKey);
 			return array($key);
 		}
-
+                           
 		$keys = array();
 
 		/* Load the new private key if it exists. */
@@ -360,7 +360,7 @@ class sspmod_saml_Message {
 		$blacklist = self::getBlacklistedAlgorithms($srcMetadata, $dstMetadata);
 
 		$lastException = NULL;
-		foreach ($keys as $i => $key) {
+		foreach ($keys as $i => $key) { //debug here if decryption fails
 			try {
 				$ret = $assertion->getAssertion($key, $blacklist);
 				SimpleSAML_Logger::debug('Decryption with key #' . $i . ' succeeded.');
@@ -466,6 +466,18 @@ class sspmod_saml_Message {
 
 		$lr = new SAML2_LogoutResponse();
 		$lr->setIssuer($srcMetadata->getString('entityid'));
+                			
+                $dst = $dstMetadata->getEndpointPrioritizedByBinding('SingleLogoutService', array(
+			SAML2_Const::BINDING_HTTP_REDIRECT,
+			SAML2_Const::BINDING_HTTP_POST)
+		);
+		
+		if (isset($dst['ResponseLocation'])) {
+			$dst = $dst['ResponseLocation'];
+		} else {
+			$dst = $dst['Location'];
+		}
+		$lr->setDestination($dst);
 
 		self::addRedirectSign($srcMetadata, $dstMetadata, $lr);
 
@@ -556,12 +568,12 @@ class sspmod_saml_Message {
 		/* Check various properties of the assertion. */
 
 		$notBefore = $assertion->getNotBefore();
-		if ($notBefore !== NULL && $notBefore > time() + 60) {
+		if ($notBefore !== NULL && $notBefore > time() + 60) { //clock skew here
 			throw new SimpleSAML_Error_Exception('Received an assertion that is valid in the future. Check clock synchronization on IdP and SP.');
 		}
 
 		$notOnOrAfter = $assertion->getNotOnOrAfter();
-		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 60) {
+		if ($notOnOrAfter !== NULL && $notOnOrAfter <= time() - 60) {  //clock skew here
 			throw new SimpleSAML_Error_Exception('Received an assertion that has expired. Check clock synchronization on IdP and SP.');
 		}
 
@@ -729,6 +741,35 @@ class sspmod_saml_Message {
 				throw $lastException;
 			}
 		}
+               
+                /** experimental creativeprogramming.it patch for supporting saml2:EncryptedAttribute */
+                if ($assertion->areAttributeEncrypted())
+                {
+                        try {
+				$keys = self::getDecryptionKeys($idpMetadata, $spMetadata);
+			} catch (Exception $e) {
+				throw new SimpleSAML_Error_Exception('Error decrypting Attributes: ' . $e->getMessage());
+			}
+
+			$blacklist = self::getBlacklistedAlgorithms($idpMetadata, $spMetadata);
+
+			$lastException = NULL;
+			foreach ($keys as $i => $key) {
+				try {
+					$assertion->decryptAttributes($key, $blacklist);
+					SimpleSAML_Logger::debug('Decryption attributes with key #' . $i . ' succeeded.');
+					$lastException = NULL;
+					break;
+				} catch (Exception $e) {
+					SimpleSAML_Logger::debug('Decryption attributes with key #' . $i . ' failed with exception: ' . $e->getMessage());
+					$lastException = $e;
+				}
+			}
+			if ($lastException !== NULL) {
+				throw $lastException;
+			}
+                }
+                /** END creativeprogramming.it patch for supporting saml2:EncryptedAttribute */
 
 		return $assertion;
 	}

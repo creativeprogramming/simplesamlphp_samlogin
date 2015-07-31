@@ -283,7 +283,7 @@ $config = array (
 	 * https://idp.example.org/ssp/, then
 	 * http://idp.example.org/ssp/module.php/core/postredirect.php must be accessible.
 	 */
-	'enable.http_post' => FALSE,
+	'enable.http_post' => TRUE, //TODO: test it!
 
 	/*
 	 * Options to override the default settings for php sessions.

@@ -17,7 +17,15 @@ echo" REQU IS:";
 print_r($_REQUEST);
 die();
 */
+try{
 $b = SAML2_Binding::getCurrentBinding();
+}catch(Exception $azure){
+    $b =  new SAML2_HTTPPost();
+}
+if (!isset($b)||empty($b)){
+       $b =  new SAML2_HTTPPost();
+}
+
 if ($b instanceof SAML2_HTTPArtifact) {
 	$b->setSPMetadata($spMetadata);
 }

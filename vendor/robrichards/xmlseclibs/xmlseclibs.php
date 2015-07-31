@@ -1,5 +1,29 @@
 <?php
 /**
+ * Copyright (c) 2007-2010 Will Bond <will@flourishlib.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+
+
+/**
  * xmlseclibs.php
  *
  * Copyright (c) 2007-2013, Robert Richards <rrichards@cdatazone.org>.
@@ -446,22 +470,52 @@ class XMLSecurityKey {
     }
 
     private function decryptMcrypt($data) {
-        $td = mcrypt_module_open($this->cryptParams['cipher'], '', $this->cryptParams['mode'], '');
-        $iv_length = mcrypt_enc_get_iv_size($td);
+        if (function_exists("mcrypt_module_open")){
+            $td = mcrypt_module_open($this->cryptParams['cipher'], '', $this->cryptParams['mode'], '');
+            $iv_length = mcrypt_enc_get_iv_size($td);
 
-        $this->iv = substr($data, 0, $iv_length);
-        $data = substr($data, $iv_length);
+            $this->iv = substr($data, 0, $iv_length);
+            $data = substr($data, $iv_length);
 
-        mcrypt_generic_init($td, $this->key, $this->iv);
-        $decrypted_data = mdecrypt_generic($td, $data);
-        mcrypt_generic_deinit($td);
-        mcrypt_module_close($td);
-        if ($this->cryptParams['mode'] == MCRYPT_MODE_CBC) {
-            $dataLen = strlen($decrypted_data);
-            $paddingLength = substr($decrypted_data, $dataLen - 1, 1);
-            $decrypted_data = substr($decrypted_data, 0, $dataLen - ord($paddingLength));
+            mcrypt_generic_init($td, $this->key, $this->iv);
+            $decrypted_data = mdecrypt_generic($td, $data);
+            mcrypt_generic_deinit($td);
+            mcrypt_module_close($td);
+            if ($this->cryptParams['mode'] == MCRYPT_MODE_CBC) {
+                $dataLen = strlen($decrypted_data);
+                $paddingLength = substr($decrypted_data, $dataLen - 1, 1);
+                $decrypted_data = substr($decrypted_data, 0, $dataLen - ord($paddingLength));
+            }
+            return $decrypted_data;
+        }else{
+   /*         include('Crypt/Rijndael.php');
+
+$cipher = new Crypt_Rijndael(); // could use CRYPT_RIJNDAEL_MODE_CBC
+// keys are null-padded to the closest valid size
+// longer than the longest key and it's truncated
+//$cipher->setKeyLength(128);
+$cipher->setKey('abcdefghijklmnopijklmnop');
+//$cipher->setIV('...'); // defaults to all-NULLs if not explicitely defined
+$cipher->disablePadding();
+
+$size = 10 * 1024;
+$plaintext = str_repeat('a', $size);
+
+echo $cipher->decrypt($cipher->encrypt($plaintext));
+*/
+          /*  print "chipertext:";
+            $chipertext = $data;
+            print_r($chipertext);
+            print "|key:".
+            $secret_key=$this->key;
+            echo $secret_key;
+            print "|";
+            $decrypted_data = fCryptography::symmetricKeyDecrypt($ciphertext, $secret_key);
+            die ("decrypted".$decrypted_data); 
+            print_r(array($this->cryptParams['cipher'], '', $this->cryptParams['mode'],$this->key, $this->iv));*/
+            die("Missing mcrypt on the system, please install php-mcrypt");
         }
-        return $decrypted_data;
+  
     }
 
     private function encryptOpenSSL($data) {

@@ -15,7 +15,6 @@ if (!$config->getBoolean('enable.saml20-sp', TRUE))
 	throw new SimpleSAML_Error_Error('NOACCESS');
 
 
-
 // Destroy local session if exists.
 $session->doLogout('saml2');
 
@@ -47,6 +46,23 @@ if ($message instanceof SAML2_LogoutRequest) {
 
 		/* Create response. */
 		$lr = sspmod_saml_Message::buildLogoutResponse($spMetadata, $idpMetadata);
+                
+                /* Ensure Joomla logout */
+                if ($lr->isSuccess()){
+                    try{
+                        _getJoomlaApp();
+                        $app = JFactory::getApplication();
+                        $currentSession = JFactory::getSession();
+                        $currentSession->set("SAMLoginPreventDoubleLogout", true);
+                        $currentSession->close();
+                        $app->logout();
+                    }catch(Exception $failedJoomlaLogout){
+                        
+                    }
+
+                }
+                
+                
 		$lr->setRelayState($message->getRelayState());
 		$lr->setInResponseTo($message->getId());
 
@@ -56,8 +72,8 @@ if ($message instanceof SAML2_LogoutRequest) {
 			SAML2_Const::BINDING_HTTP_REDIRECT,
 			SAML2_Const::BINDING_HTTP_POST)
 		);
-   
-		if (!$binding instanceof SAML2_SOAP) {
+   	
+        	if (!$binding instanceof SAML2_SOAP) {
 			$binding = SAML2_Binding::getBinding($dst['Binding']);
 			if (isset($dst['ResponseLocation'])) {
 				$dst = $dst['ResponseLocation'];

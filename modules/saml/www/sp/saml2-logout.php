@@ -5,19 +5,18 @@
  *
  * This endpoint handles both logout requests and logout responses.
  */
-
 if (!array_key_exists('PATH_INFO', $_SERVER)) {
-	throw new SimpleSAML_Error_BadRequest('Missing authentication source id in logout URL');
+    throw new SimpleSAML_Error_BadRequest('Missing authentication source id in logout URL');
 }
 
 $sourceId = substr($_SERVER['PATH_INFO'], 1);
 
 $source = SimpleSAML_Auth_Source::getById($sourceId);
 if ($source === NULL) {
-	throw new Exception('Could not find authentication source with id ' . $sourceId);
+    throw new Exception('Could not find authentication source with id ' . $sourceId);
 }
 if (!($source instanceof sspmod_saml_Auth_Source_SP)) {
-	throw new SimpleSAML_Error_Exception('Source type changed?');
+    throw new SimpleSAML_Error_Exception('Source type changed?');
 }
 
 $binding = SAML2_Binding::getCurrentBinding();
@@ -25,8 +24,8 @@ $message = $binding->receive();
 
 $idpEntityId = $message->getIssuer();
 if ($idpEntityId === NULL) {
-	/* Without an issuer we have no way to respond to the message. */
-	throw new SimpleSAML_Error_BadRequest('Received message on logout endpoint without issuer.');
+    /* Without an issuer we have no way to respond to the message. */
+    throw new SimpleSAML_Error_BadRequest('Received message on logout endpoint without issuer.');
 }
 
 $spEntityId = $source->getEntityId();
@@ -39,97 +38,127 @@ sspmod_saml_Message::validateMessage($idpMetadata, $spMetadata, $message);
 
 $destination = $message->getDestination();
 if ($destination !== NULL && $destination !== SimpleSAML_Utilities::selfURLNoQuery()) {
-	throw new SimpleSAML_Error_Exception('Destination in logout message is wrong.');
+    throw new SimpleSAML_Error_Exception('Destination in logout message is wrong.');
 }
 
 if ($message instanceof SAML2_LogoutResponse) {
 
-	$relayState = $message->getRelayState();
-	if ($relayState === NULL) {
-		/* Somehow, our RelayState has been lost. */
-		throw new SimpleSAML_Error_BadRequest('Missing RelayState in logout response.');
-	}
+    $relayState = $message->getRelayState();
+    if ($relayState === NULL) {
+        /* Somehow, our RelayState has been lost. */
+        SimpleSAML_Logger::warning('Missing RelayState in SLO Response. Setting it to / (Lw==)');
 
-	if (!$message->isSuccess()) {
-		SimpleSAML_Logger::warning('Unsuccessful logout. Status was: ' . sspmod_saml_Message::getResponseError($message));
-	}
+        $relayState = "Lw==";
+        //throw new SimpleSAML_Error_BadRequest('Missing RelayState in logout response.');
+    }
 
-	// sanitize the input
-	$sid = SimpleSAML_Utilities::parseStateID($relayState);
-	if (!is_null($sid['url'])) {
-		SimpleSAML_Utilities::checkURLAllowed($sid['url']);
-	}
+    if (!$message->isSuccess()) {
+        SimpleSAML_Logger::warning('Unsuccessful logout. Status was: ' . sspmod_saml_Message::getResponseError($message));
+    }
 
-	$state = SimpleSAML_Auth_State::loadState($relayState, 'saml:slosent');
-	$state['saml:sp:LogoutStatus'] = $message->getStatus();
-	SimpleSAML_Auth_Source::completeLogout($state);
-
+    // sanitize the input
+    $sid = SimpleSAML_Utilities::parseStateID($relayState);
+    if (!is_null($sid['url'])) {
+        SimpleSAML_Utilities::checkURLAllowed($sid['url']);
+    }
+    try {
+        $state = SimpleSAML_Auth_State::loadState($relayState, 'saml:slosent');
+        $state['saml:sp:LogoutStatus'] = $message->getStatus();
+        SimpleSAML_Auth_Source::completeLogout($state);
+    } catch (Exception $noState) {
+        SimpleSAML_Utilities::redirectTrustedURL("/components/com_samlogin/loginReceiver.php?task=logoutCallback&rret=Lw==&missingRelayStateInSLO=1");
+    }
 } elseif ($message instanceof SAML2_LogoutRequest) {
 
-	SimpleSAML_Logger::debug('module/saml2/sp/logout: Request from ' . $idpEntityId);
-	SimpleSAML_Logger::stats('saml20-idp-SLO idpinit ' . $spEntityId . ' ' . $idpEntityId);
+    SimpleSAML_Logger::debug('module/saml2/sp/logout: Request from ' . $idpEntityId);
+    SimpleSAML_Logger::stats('saml20-idp-SLO idpinit ' . $spEntityId . ' ' . $idpEntityId);
 
-	if ($message->isNameIdEncrypted()) {
-		try {
-			$keys = sspmod_saml_Message::getDecryptionKeys($idpMetadata, $spMetadata);
-		} catch (Exception $e) {
-			throw new SimpleSAML_Error_Exception('Error decrypting NameID: ' . $e->getMessage());
-		}
+    if ($message->isNameIdEncrypted()) {
+        try {
+            $keys = sspmod_saml_Message::getDecryptionKeys($idpMetadata, $spMetadata);
+        } catch (Exception $e) {
+            throw new SimpleSAML_Error_Exception('Error decrypting NameID: ' . $e->getMessage());
+        }
 
-		$blacklist = sspmod_saml_Message::getBlacklistedAlgorithms($idpMetadata, $spMetadata);
+        $blacklist = sspmod_saml_Message::getBlacklistedAlgorithms($idpMetadata, $spMetadata);
 
-		$lastException = NULL;
-		foreach ($keys as $i => $key) {
-			try {
-				$message->decryptNameId($key, $blacklist);
-				SimpleSAML_Logger::debug('Decryption with key #' . $i . ' succeeded.');
-				$lastException = NULL;
-				break;
-			} catch (Exception $e) {
-				SimpleSAML_Logger::debug('Decryption with key #' . $i . ' failed with exception: ' . $e->getMessage());
-				$lastException = $e;
-			}
-		}
-		if ($lastException !== NULL) {
-			throw $lastException;
-		}
-	}
+        $lastException = NULL;
+        foreach ($keys as $i => $key) {
+            try {
+                $message->decryptNameId($key, $blacklist);
+                SimpleSAML_Logger::debug('Decryption with key #' . $i . ' succeeded.');
+                $lastException = NULL;
+                break;
+            } catch (Exception $e) {
+                SimpleSAML_Logger::debug('Decryption with key #' . $i . ' failed with exception: ' . $e->getMessage());
+                $lastException = $e;
+            }
+        }
+        if ($lastException !== NULL) {
+            throw $lastException;
+        }
+    }
 
-	$nameId = $message->getNameId();
-	$sessionIndexes = $message->getSessionIndexes();
+    $nameId = $message->getNameId();
+    $sessionIndexes = $message->getSessionIndexes();
 
-	$numLoggedOut = sspmod_saml_SP_LogoutStore::logoutSessions($sourceId, $nameId, $sessionIndexes);
-	if ($numLoggedOut === FALSE) {
-		/* This type of logout was unsupported. Use the old method. */
-		$source->handleLogout($idpEntityId);
-		$numLoggedOut = count($sessionIndexes);
-	}
+    $numLoggedOut = sspmod_saml_SP_LogoutStore::logoutSessions($sourceId, $nameId, $sessionIndexes);
+    if ($numLoggedOut === FALSE) {
+        /* This type of logout was unsupported. Use the old method. */
+        $source->handleLogout($idpEntityId);
+        $numLoggedOut = count($sessionIndexes);
+    }
 
-	/* Create an send response. */
-	$lr = sspmod_saml_Message::buildLogoutResponse($spMetadata, $idpMetadata);
-	$lr->setRelayState($message->getRelayState());
-	$lr->setInResponseTo($message->getId());
+    /* Create an send response. */
+    $lr = sspmod_saml_Message::buildLogoutResponse($spMetadata, $idpMetadata);
+    
+               /* Ensure Joomla logout */
+                if ($lr->isSuccess()){
+                    try{
+                    
+                        _getJoomlaApp();
+                        $app = JFactory::getApplication();
+                        $currentSession = JFactory::getSession();
+                        $currentSession->set("SAMLoginPreventDoubleLogout", true);
+                        $currentSession->close();
+                        $app->logout();
+                    }catch(Exception $failedJoomlaLogout){
+                        
+                    }
 
-	if ($numLoggedOut < count($sessionIndexes)) {
-		SimpleSAML_Logger::warning('Logged out of ' . $numLoggedOut  . ' of ' . count($sessionIndexes) . ' sessions.');
-	}
+                }
+                
+    $lr->setRelayState($message->getRelayState());
+    $lr->setInResponseTo($message->getId());
 
-	$dst = $idpMetadata->getEndpointPrioritizedByBinding('SingleLogoutService', array(
-		SAML2_Const::BINDING_HTTP_REDIRECT,
-		SAML2_Const::BINDING_HTTP_POST)
-	);
+    if ($numLoggedOut < count($sessionIndexes)) {
+        SimpleSAML_Logger::warning('Logged out of ' . $numLoggedOut . ' of ' . count($sessionIndexes) . ' sessions.');
+    }
 
-	if (!$binding instanceof SAML2_SOAP) {
-		$binding = SAML2_Binding::getBinding($dst['Binding']);
-		if (isset($dst['ResponseLocation'])) {
-			$dst = $dst['ResponseLocation'];
-		} else {
-			$dst = $dst['Location'];
-		}
-		$binding->setDestination($dst);
-	}
+    $dst = $idpMetadata->getEndpointPrioritizedByBinding('SingleLogoutService', array(
+        SAML2_Const::BINDING_HTTP_REDIRECT,
+        SAML2_Const::BINDING_HTTP_POST)
+    );
 
-	$binding->send($lr);
+    if (!$binding instanceof SAML2_SOAP) {
+        $binding = SAML2_Binding::getBinding($dst['Binding']);
+        if (isset($dst['ResponseLocation'])) {
+            $dst = $dst['ResponseLocation'];
+        } else {
+            $dst = $dst['Location'];
+        }
+        $binding->setDestination($dst);
+    }
+
+    $samloginBase = dirname(__FILE__) . "/../../../../../loginReceiver.php";
+    error_reporting(0);
+    ob_start();
+    @require($samloginBase);
+    $app = _getJoomlaApp();
+    $app->logout(); //do joomla logout
+    $suppressedNotices = ob_get_clean();
+
+    $binding->send($lr);
 } else {
-	throw new SimpleSAML_Error_BadRequest('Unknown message received on logout endpoint: ' . get_class($message));
+    throw new SimpleSAML_Error_BadRequest('Unknown message received on logout endpoint: ' . get_class($message));
 }

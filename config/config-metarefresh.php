@@ -51,7 +51,7 @@ $config = array(
                                          */
 				),
 			),
-			'expireAfter' 		=> 60*60*24*365, // Maximum 365 days cache time.
+			'expireAfter' 		=> 60*60*24*31, // Maximum 365 days cache time.
 			'outputDir' 	=> 'metadata/federations/',
 
 			/*

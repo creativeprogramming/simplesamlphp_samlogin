@@ -42,7 +42,8 @@ if (isset($session) ) {
 			'wa' => 'wsignout1.0',
 			'wct' =>  gmdate('Y-m-d\TH:i:s\Z', time()),
 			'wtrealm' => $spentityid,
-			'wctx' => $returnTo
+			//'wctx' => $returnTo, seems to be not working with thinktecutre, the param is wreply
+                        'wreply'=> $returnTo
 		));
 		
 

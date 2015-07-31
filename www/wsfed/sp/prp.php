@@ -66,9 +66,9 @@ try {
 	$xpath->registerNamespace('saml', 'urn:oasis:names:tc:SAML:1.0:assertion');
 
 	/* Find the saml:Assertion element in the response. */
-	$assertions = $xpath->query('/wst:RequestSecurityTokenResponse/wst:RequestedSecurityToken/saml:Assertion');
+	$assertions = $xpath->query('//Assertion');
 	if ($assertions->length === 0) {
-		throw new Exception('Received a response without an assertion on the WS-Fed PRP handler.');
+		throw new Exception('test Received a response without an assertion on the WS-Fed PRP handler.');
 	}
 	if ($assertions->length > 1) {
 		throw new Exception('The WS-Fed PRP handler currently only supports a single assertion in a response.');

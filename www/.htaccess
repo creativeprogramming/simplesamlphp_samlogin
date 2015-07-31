@@ -1,0 +1,5 @@
+RewriteEngine Off
+#this is essentialy neede to prevent a postredirect issue when
+# 1) http->https rewrite is set in apache, in order to normalize url and/or to avoid secure cookie session close by joomla
+# 2) we are connecting to an http only SP (samlogin IdP)
+# 3) we are using postredirect.php method to prevent browser popu

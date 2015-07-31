@@ -10,7 +10,9 @@
  * @version $Id$
  */
 
+
 require_once('_include.php');
+
 
 /* Index pages - filenames to attempt when accessing directories. */
 $indexFiles = array('index.php', 'index.html', 'index.htm', 'index.txt');
@@ -40,7 +42,7 @@ $mimeTypes = array(
 	);
 
 try {
-    
+    SimpleSAML_Utilities::__fixXForwardedProtoIfNeeded();
     SimpleSAML_Utilities::__fixPathInfoForNginx();
 
 	if (empty($_SERVER['PATH_INFO'])) {
@@ -174,11 +176,11 @@ try {
 	exit();
 
 } catch(SimpleSAML_Error_Error $e) {
-
+        samloginJoomlaExceptionHandler($e);
 	$e->show();
 
 } catch(Exception $e) {
-
+        samloginJoomlaExceptionHandler($e);
 	$e = new SimpleSAML_Error_Error('UNHANDLEDEXCEPTION', $e);
 	$e->show();
 

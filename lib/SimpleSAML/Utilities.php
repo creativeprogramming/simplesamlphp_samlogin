@@ -7,6 +7,12 @@
  * @package simpleSAMLphp
  * @version $Id: Utilities.php 3362 2014-02-09 17:11:23Z jaimepc@gmail.com $
  */
+
+//hardcoded patch to support https url routing 04.20.2015
+//TODO: make a joomla samlogin configuration flag to enable this:
+//$_SERVER["HTTP_X_FORWARDED_PROTO"]="https";
+//please don't upgrade without restoring this
+
 class SimpleSAML_Utilities {
 
 	/**
@@ -137,6 +143,7 @@ class SimpleSAML_Utilities {
 		} else {
 			$portnumber = 80;
 		}
+               // $portnumber = 443; //patch for load balancer misconfigurations (f5 version)
 		$port = ':' . $portnumber;
 
 		if (self::getServerHTTPS()) {
@@ -149,7 +156,15 @@ class SimpleSAML_Utilities {
 
 	}
         
-        
+        public static function __fixXForwardedProtoIfNeeded(){
+            if(isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'){
+                $_SERVER['HTTPS']='on'; 
+                if ($_SERVER['SERVER_PORT']==80){
+                    $_SERVER['SERVER_PORT']=443;
+                }
+            }
+
+        }
         public static function __fixPathInfoForNginx() {
             $matches = array();
             if (preg_match("/^(.+\/module\.php)(\?)?(\/.+)$/", $_SERVER['REQUEST_URI'], $matches)) {
@@ -1967,7 +1982,7 @@ class SimpleSAML_Utilities {
 		assert('is_string($data)');
 		assert('is_numeric($mode)');
 
-		$tmpFile = $filename . '.new.' . getmypid() . '.' . php_uname('n');
+		$tmpFile = $filename . '.new.' . getmypid() . '.' . $_SERVER['HOST_NAME'];
 
 		$res = file_put_contents($tmpFile, $data);
 		if ($res === FALSE) {
@@ -2405,3 +2420,5 @@ class SimpleSAML_Utilities {
 	}
 
 }
+//patch
+SimpleSAML_Utilities::__fixXForwardedProtoIfNeeded();

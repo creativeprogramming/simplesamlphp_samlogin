@@ -7,7 +7,7 @@ $config = SimpleSAML_Configuration::getInstance();
 /* This page will redirect to itself after processing a POST request and sending the email. */
 if($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	/* The message has been sent. Show error report page. */
-
+        samloginJoomlaExceptionHandler($exception);
 	$t = new SimpleSAML_XHTML_Template($config, 'errorreport.php', 'errors');
 	$t->show();
 	exit;

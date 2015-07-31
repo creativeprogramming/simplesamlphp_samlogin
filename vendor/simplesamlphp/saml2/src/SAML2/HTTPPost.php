@@ -57,10 +57,12 @@ class SAML2_HTTPPost extends SAML2_Binding
      */
     public function receive()
     {
-        if (array_key_exists('SAMLRequest', $_POST)) {
-            $msg = $_POST['SAMLRequest'];
-        } elseif (array_key_exists('SAMLResponse', $_POST)) {
-            $msg = $_POST['SAMLResponse'];
+       // print("post request is ".print_r($_REQUEST,true));
+        //die();
+        if (array_key_exists('SAMLRequest', $_REQUEST)) {
+            $msg = $_REQUEST['SAMLRequest'];
+        } elseif (array_key_exists('SAMLResponse', $_REQUEST)) {
+            $msg = $_REQUEST['SAMLResponse'];
         } else {
             throw new Exception('Missing SAMLRequest or SAMLResponse parameter.');
         }
